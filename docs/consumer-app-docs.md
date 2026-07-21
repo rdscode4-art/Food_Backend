@@ -1,0 +1,320 @@
+# Consumer App Documentation
+
+This document outlines all the APIs and frontend implementation notes required to build the Fast Food Consumer App.
+
+## Frontend Implementation Notes
+
+1. **Authentication State:**
+   - Store the `accessToken` in memory or secure storage. Attach it as a `Bearer` token to the `Authorization` header for all protected requests.
+   - The `refreshToken` is handled automatically via HTTP-only cookies.
+   - **OTP Flow:** The signup process has two steps. Step 1: `POST /signup`. Step 2: Navigate to an OTP verification screen and call `POST /verify-otp`.
+
+2. **Real-time Order Updates (Socket.io):**
+   - Connect to the socket server at `ws://localhost:6030`.
+   - On successful login, emit a `join` event with the user's `_id` so the server knows where to send direct notifications.
+   - Listen for the `order_update` event to show toast notifications and automatically refetch order details/status.
+
+3. **Live Order Tracking:**
+   - For an active order, poll `GET /api/order/:id/track` every 5-10 seconds OR rely on socket events to update the delivery partner's marker on a map view.
+   - Use a mapping library (e.g., Google Maps, Mapbox, Leaflet) to plot the restaurant location, the user's delivery address, and the `deliveryPartner.currentLocation.coordinates`.
+
+4. **Cart Management:**
+   - Cart state is tied to a single restaurant. If the user tries to add an item from a different restaurant, the API will return a 409 Conflict. Prompt the user: "Clear cart and add this item?" If yes, call `DELETE /api/cart` first, then add the new item.
+
+5. **Mock Payment Flow:**
+   - After `POST /api/order/checkout`, the server generates an order with `paymentStatus = "pending"`.
+   - The app should immediately call `POST /api/payments/mock-charge` with the new `orderId`. If it succeeds, the order is ready for the restaurant. If it fails, show an error and prompt to retry payment.
+
+---
+
+## Comprehensive API Reference
+
+### 1. Authentication (`/api/auth`)
+
+**Signup**
+```bash
+curl -X POST http://localhost:6030/api/auth/signup \
+-H "Content-Type: application/json" \
+-d '{"name":"John Doe","email":"john@example.com","password":"password123","phone":"9999999999"}'
+```
+
+**Verify OTP**
+```bash
+curl -X POST http://localhost:6030/api/auth/verify-otp \
+-H "Content-Type: application/json" \
+-d '{"email":"john@example.com","code":"1234","purpose":"signup"}'
+```
+
+**Resend OTP**
+```bash
+curl -X POST http://localhost:6030/api/auth/resend-otp \
+-H "Content-Type: application/json" \
+-d '{"email":"john@example.com","purpose":"signup"}'
+```
+
+**Login**
+```bash
+curl -X POST http://localhost:6030/api/auth/login \
+-H "Content-Type: application/json" \
+-d '{"email":"john@example.com","password":"password123"}'
+```
+
+**Forgot Password**
+```bash
+curl -X POST http://localhost:6030/api/auth/forgot-password \
+-H "Content-Type: application/json" \
+-d '{"email":"john@example.com"}'
+```
+
+**Reset Password**
+```bash
+curl -X POST http://localhost:6030/api/auth/reset-password \
+-H "Content-Type: application/json" \
+-d '{"email":"john@example.com","code":"1234","newPassword":"newpassword123"}'
+```
+
+**Refresh Token (uses HTTP-only cookie)**
+```bash
+curl -X POST http://localhost:6030/api/auth/refresh-token
+```
+
+**Logout**
+```bash
+curl -X POST http://localhost:6030/api/auth/logout \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+### 2. User Profile & Addresses (`/api/user`)
+
+**Get Profile**
+```bash
+curl -X GET http://localhost:6030/api/user/profile \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Update Profile**
+```bash
+curl -X PUT http://localhost:6030/api/user/profile \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"name":"John Updated"}'
+```
+
+**Get All Addresses**
+```bash
+curl -X GET http://localhost:6030/api/user/addresses \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Create Address**
+```bash
+curl -X POST http://localhost:6030/api/user/addresses \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"label":"Home","street":"123 Main St","city":"Metro","zip":"10001","fullAddress":"123 Main St, Metro 10001","location":{"type":"Point","coordinates":[77.1,28.6]}}'
+```
+
+**Update Address**
+```bash
+curl -X PUT http://localhost:6030/api/user/addresses/<addressId> \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"isDefault":true}'
+```
+
+**Delete Address**
+```bash
+curl -X DELETE http://localhost:6030/api/user/addresses/<addressId> \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Get Payment Methods**
+```bash
+curl -X GET http://localhost:6030/api/user/payment-methods \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Add Payment Method**
+```bash
+curl -X POST http://localhost:6030/api/user/payment-methods \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"type":"card","details":"4242"}'
+```
+
+**Delete Payment Method**
+```bash
+curl -X DELETE http://localhost:6030/api/user/payment-methods/<paymentMethodId> \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+### 3. Discovery & Menu (`/api/restaurants` & `/api/menu`)
+
+**Get Categories**
+```bash
+curl -X GET http://localhost:6030/api/restaurants/categories
+```
+
+**Get Featured Restaurants**
+```bash
+curl -X GET http://localhost:6030/api/restaurants/featured
+```
+
+**Get Fastest Restaurants**
+```bash
+curl -X GET http://localhost:6030/api/restaurants/fastest
+```
+
+**Get Popular Restaurants**
+```bash
+curl -X GET http://localhost:6030/api/restaurants/popular
+```
+
+**Search Restaurants (by ?q=keyword)**
+```bash
+curl -X GET http://localhost:6030/api/restaurants/search?q=burger
+```
+
+**Get Restaurant Detail**
+```bash
+curl -X GET http://localhost:6030/api/restaurants/<restaurantId>
+```
+
+**Get Menu for Restaurant**
+```bash
+curl -X GET http://localhost:6030/api/menu/<restaurantId>
+```
+
+**Get Specific Menu Item Detail**
+```bash
+curl -X GET http://localhost:6030/api/menu/item/<itemId>
+```
+
+### 4. Cart (`/api/cart`)
+
+**Get Current Cart**
+```bash
+curl -X GET http://localhost:6030/api/cart \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Add Item to Cart**
+```bash
+curl -X POST http://localhost:6030/api/cart \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"menuItemId":"<menuId>","quantity":1,"restaurantId":"<restaurantId>"}'
+```
+
+**Update Cart Item Quantity**
+```bash
+curl -X PUT http://localhost:6030/api/cart \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"menuItemId":"<menuId>","quantity":2}'
+```
+
+**Delete Item from Cart**
+```bash
+curl -X DELETE http://localhost:6030/api/cart/<menuItemId> \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+### 5. Wishlist (`/api/wishlist`)
+
+**Get Wishlist**
+```bash
+curl -X GET http://localhost:6030/api/wishlist \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Toggle Item in Wishlist**
+```bash
+curl -X POST http://localhost:6030/api/wishlist/toggle \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"itemType":"restaurant","itemId":"<restaurantId>"}'
+```
+
+### 6. Notifications (`/api/notifications`)
+
+**Get All Notifications**
+```bash
+curl -X GET http://localhost:6030/api/notifications \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Mark Notification as Read**
+```bash
+curl -X PUT http://localhost:6030/api/notifications/<id>/read \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Mark All as Read**
+```bash
+curl -X PUT http://localhost:6030/api/notifications/read-all \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+### 7. Checkout & Orders (`/api/order` & `/api/payments`)
+
+**Checkout (Creates placed order & clears cart)**
+```bash
+curl -X POST http://localhost:6030/api/order/checkout \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"addressId":"<addressId>","paymentMethod":"card"}'
+```
+
+**Mock Payment Charge**
+```bash
+curl -X POST http://localhost:6030/api/payments/mock-charge \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"orderId":"<orderId>","method":"card","forceStatus":"success"}'
+```
+
+**Get Order History**
+```bash
+curl -X GET http://localhost:6030/api/order \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Get Order Detail**
+```bash
+curl -X GET http://localhost:6030/api/order/<orderId> \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Cancel Order (Only if status is "placed")**
+```bash
+curl -X PUT http://localhost:6030/api/order/<orderId>/cancel \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Track Active Order (GPS tracking)**
+```bash
+curl -X GET http://localhost:6030/api/order/<orderId>/track \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Submit Review**
+```bash
+curl -X POST http://localhost:6030/api/order/<orderId>/review \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"rating":5,"comment":"Delicious!"}'
+```
+
+**Get Help / Support Info**
+```bash
+curl -X GET http://localhost:6030/api/order/<orderId>/help \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+### 8. Static Content (`/api/static`)
+
+**About Us**
+```bash
+curl -X GET http://localhost:6030/api/static/about
+```
+
+**FAQ**
+```bash
+curl -X GET http://localhost:6030/api/static/faq
+```
+
+**Terms & Conditions**
+```bash
+curl -X GET http://localhost:6030/api/static/terms
+```
