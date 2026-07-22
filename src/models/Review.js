@@ -16,7 +16,19 @@ const reviewSchema = new mongoose.Schema(
     restaurant: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Restaurant',
-      required: true,
+    },
+    deliveryPartner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    foodItem: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'MenuItem',
+    },
+    targetType: {
+      type: String,
+      enum: ['restaurant', 'driver', 'food', 'order'],
+      default: 'order',
     },
     rating: {
       type: Number,
@@ -26,6 +38,14 @@ const reviewSchema = new mongoose.Schema(
     },
     comment: {
       type: String,
+    },
+    photos: {
+      type: [String],
+      default: [],
+    },
+    isReported: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

@@ -42,6 +42,41 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    walletBalance: {
+      type: Number,
+      default: 0,
+    },
+    loyaltyPoints: {
+      type: Number,
+      default: 0,
+    },
+    currentMembership: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'MembershipPlan',
+    },
+    membershipExpiry: {
+      type: Date,
+    },
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true, // sparse because some users might not have it initially
+    },
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    dob: {
+      type: Date,
+    },
+    recentSearches: {
+      type: [String],
+      default: [],
+    },
+    activeSessions: {
+      type: [String], // Array of refresh tokens or device IDs to track logins
+      default: [],
+    },
     // restaurant_owner-only
     businessName: {
       type: String,

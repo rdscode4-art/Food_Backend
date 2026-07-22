@@ -192,12 +192,17 @@ exports.outForDeliveryOrder = async (req, res) => {
 exports.deliverOrder = async (req, res) => {
   try {
     const { id } = req.params;
+    const { deliveryOtp } = req.body;
 
     const order = await Order.findOne({ _id: id, 'deliveryPartner.user': req.user._id });
     if (!order) return errorResponse(res, 'Order not found or not assigned to you', 404);
 
     if (order.status !== 'out_for_delivery') {
       return errorResponse(res, `Cannot mark as delivered from status: ${order.status}`, 400);
+    }
+
+    if (order.deliveryOtp && order.deliveryOtp !== deliveryOtp) {
+      return errorResponse(res, 'Invalid Delivery OTP', 400);
     }
 
     order.status = 'delivered';

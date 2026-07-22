@@ -25,20 +25,42 @@ const menuItemSchema = new mongoose.Schema(
     image: {
       type: String,
     },
+    foodImages: {
+      type: [String],
+      default: [],
+    },
     category: {
       type: String, // String for within-restaurant menu category
       required: true,
     },
-    addons: [
-      {
-        name: { type: String, required: true },
-        price: { type: Number, required: true },
-      },
-    ],
     isAvailable: {
       type: Boolean,
       default: true,
     },
+    isVeg: {
+      type: Boolean,
+      default: true,
+    },
+    isSpicy: {
+      type: Boolean,
+      default: false,
+    },
+    isBestseller: {
+      type: Boolean,
+      default: false,
+    },
+    variants: [
+      {
+        name: String, // e.g., 'Small', 'Medium', 'Large'
+        price: Number,
+      }
+    ],
+    addons: [
+      {
+        name: String, // e.g., 'Extra Cheese'
+        price: Number,
+      }
+    ],
   },
   { timestamps: true }
 );

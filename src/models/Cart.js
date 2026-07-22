@@ -25,6 +25,10 @@ const cartSchema = new mongoose.Schema(
           required: true,
           min: 1,
         },
+        selectedVariant: {
+          name: String,
+          price: Number,
+        },
         selectedAddons: [
           {
             name: String,
@@ -38,6 +42,11 @@ const cartSchema = new mongoose.Schema(
       },
     ],
     totalAmount: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    discountAmount: {
       type: Number,
       default: 0,
     },

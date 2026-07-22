@@ -2,9 +2,26 @@ const Cart = require('../models/Cart');
 const MenuItem = require('../models/MenuItem');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 
-// Helper to calculate cart total
 const calculateTotal = (items) => {
   return items.reduce((acc, item) => acc + item.totalItemPrice, 0);
+};
+
+const applyFees = (cart) => {
+  const itemTotal = calculateTotal(cart.items);
+  
+  cart.taxes = parseFloat((itemTotal * 0.05).toFixed(2)); // 5% GST
+  cart.platformFee = 5; // Flat Rs 5
+  cart.smallOrderFee = itemTotal < 150 ? 20 : 0; // Rs 20 if under 150
+  
+  // Example surge condition (randomly applied for demo or based on time/demand)
+  const isSurge = Math.random() > 0.8; 
+  cart.surgeFee = isSurge ? 15 : 0;
+
+  // Assume delivery fee comes from restaurant or is calculated separately, 
+  // but for now let's set a base delivery fee if not present
+  const baseDeliveryFee = cart.deliveryFee || 30;
+
+  cart.totalAmount = itemTotal + cart.taxes + cart.platformFee + cart.smallOrderFee + cart.surgeFee + baseDeliveryFee - (cart.discountAmount || 0);
 };
 
 exports.getCart = async (req, res) => {
@@ -21,7 +38,7 @@ exports.getCart = async (req, res) => {
 
 exports.addToCart = async (req, res) => {
   try {
-    const { menuItemId, quantity = 1, selectedAddons = [] } = req.body;
+    const { menuItemId, quantity = 1, selectedAddons = [], selectedVariant = null } = req.body;
 
     const menuItem = await MenuItem.findById(menuItemId).populate('restaurant');
     if (!menuItem || !menuItem.isAvailable) {
@@ -32,7 +49,18 @@ exports.addToCart = async (req, res) => {
       return errorResponse(res, 'Restaurant is currently not active', 400);
     }
 
-    const itemPrice = menuItem.discountPrice || menuItem.price;
+    // Use variant price if provided, otherwise base price
+    let itemPrice = menuItem.discountPrice || menuItem.price;
+    if (selectedVariant && selectedVariant.name) {
+      // Find variant in menu item to get actual price
+      const variant = menuItem.variants.find(v => v.name === selectedVariant.name);
+      if (variant) {
+        itemPrice = variant.price;
+        // Optionally apply general discount percentage if needed, but let's stick to variant price
+        selectedVariant.price = variant.price; 
+      }
+    }
+
     const addonsPrice = selectedAddons.reduce((acc, addon) => acc + addon.price, 0);
     const totalItemPrice = (itemPrice + addonsPrice) * quantity;
 
@@ -43,9 +71,10 @@ exports.addToCart = async (req, res) => {
       cart = new Cart({
         user: req.user._id,
         restaurant: menuItem.restaurant._id,
-        items: [{ menuItem: menuItemId, quantity, selectedAddons, totalItemPrice }],
-        totalAmount: totalItemPrice,
+        items: [{ menuItem: menuItemId, quantity, selectedAddons, selectedVariant, totalItemPrice }],
+        deliveryFee: menuItem.restaurant.deliveryFee || 30, // Get delivery fee from restaurant
       });
+      applyFees(cart);
       await cart.save();
       return successResponse(res, 'Item added to cart', cart, 201);
     }
@@ -55,24 +84,23 @@ exports.addToCart = async (req, res) => {
       return errorResponse(res, 'Cart contains items from another restaurant. Please clear your cart first.', 409);
     }
 
-    // Check if item already in cart (ignoring addon differences for simplicity, or we could group them)
-    // Here we'll just check by menuItemId. If they pick different addons, we could treat it as a separate item, 
-    // but typically it's simpler to just match menuItemId and update quantity if we don't care about addons matching exactly.
-    // Let's implement exact match (menuItem + addons) or just treat different addons as separate entries.
-    // We will treat it as a new entry if addons differ, or just stringify addons to check.
     const addonsString = JSON.stringify(selectedAddons);
+    const variantString = JSON.stringify(selectedVariant);
+    
     const existingItemIndex = cart.items.findIndex(
-      (item) => item.menuItem.toString() === menuItemId && JSON.stringify(item.selectedAddons) === addonsString
+      (item) => item.menuItem.toString() === menuItemId && 
+                JSON.stringify(item.selectedAddons) === addonsString &&
+                JSON.stringify(item.selectedVariant) === variantString
     );
 
     if (existingItemIndex > -1) {
       cart.items[existingItemIndex].quantity += quantity;
       cart.items[existingItemIndex].totalItemPrice += totalItemPrice;
     } else {
-      cart.items.push({ menuItem: menuItemId, quantity, selectedAddons, totalItemPrice });
+      cart.items.push({ menuItem: menuItemId, quantity, selectedAddons, selectedVariant, totalItemPrice });
     }
 
-    cart.totalAmount = calculateTotal(cart.items);
+    applyFees(cart);
     await cart.save();
 
     return successResponse(res, 'Item added to cart', cart);
@@ -103,7 +131,7 @@ exports.updateQuantity = async (req, res) => {
     cart.items[itemIndex].quantity = quantity;
     cart.items[itemIndex].totalItemPrice = unitPrice * quantity;
 
-    cart.totalAmount = calculateTotal(cart.items);
+    applyFees(cart);
     await cart.save();
 
     return successResponse(res, 'Cart updated', cart);
@@ -130,7 +158,7 @@ exports.removeItem = async (req, res) => {
       return successResponse(res, 'Cart is empty and deleted', { items: [], totalAmount: 0 });
     }
 
-    cart.totalAmount = calculateTotal(cart.items);
+    applyFees(cart);
     await cart.save();
 
     return successResponse(res, 'Item removed from cart', cart);

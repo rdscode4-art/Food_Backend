@@ -2,6 +2,7 @@ const express = require('express');
 const { check } = require('express-validator');
 const authController = require('../controllers/auth.controller');
 const { validate } = require('../middlewares/validate.middleware');
+const { authenticate } = require('../middlewares/auth.middleware');
 const rateLimit = require('express-rate-limit');
 
 const router = express.Router();
@@ -90,5 +91,9 @@ router.post(
 
 router.post('/refresh-token', authController.refreshToken);
 router.post('/logout', authController.logout);
+
+// Protected routes
+router.use(authenticate);
+router.post('/logout-all', authController.logoutAll);
 
 module.exports = router;

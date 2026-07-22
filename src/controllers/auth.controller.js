@@ -15,7 +15,15 @@ const hashPassword = async (password) => {
 // Generic signup logic
 const registerUser = async (req, res, role, extraFields = {}) => {
   try {
-    const { name, email, password, phone, ...rest } = req.body;
+    const { name, email, password, phone, referredByCode, ...rest } = req.body;
+
+    let referredById = null;
+    if (referredByCode) {
+      const referrer = await User.findOne({ referralCode: referredByCode });
+      if (referrer) {
+        referredById = referrer._id;
+      }
+    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -43,8 +51,10 @@ const registerUser = async (req, res, role, extraFields = {}) => {
 
     const hashedPassword = await hashPassword(password);
     
-    // For restaurant_owner and delivery_partner, default isApproved is false
     const isApproved = role === 'customer';
+
+    // Generate random 6 character referral code
+    const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     const newUser = new User({
       name,
@@ -53,6 +63,8 @@ const registerUser = async (req, res, role, extraFields = {}) => {
       phone,
       role,
       isApproved,
+      referralCode,
+      referredBy: referredById,
       ...extraFields,
     });
 
@@ -105,6 +117,37 @@ exports.verifyOtp = async (req, res) => {
     if (purpose === 'signup') {
       user.isVerified = true;
       await user.save();
+
+      // Check for Referral Bonus if they were referred
+      if (user.referredBy) {
+        const referrer = await User.findById(user.referredBy);
+        if (referrer) {
+          const WalletTransaction = require('../models/WalletTransaction');
+          const bonusAmount = 50;
+
+          // Reward new user
+          user.walletBalance = (user.walletBalance || 0) + bonusAmount;
+          await user.save();
+          await WalletTransaction.create({
+            user: user._id,
+            amount: bonusAmount,
+            type: 'credit',
+            purpose: 'referral_bonus',
+            description: 'Sign up referral bonus'
+          });
+
+          // Reward referrer
+          referrer.walletBalance = (referrer.walletBalance || 0) + bonusAmount;
+          await referrer.save();
+          await WalletTransaction.create({
+            user: referrer._id,
+            amount: bonusAmount,
+            type: 'credit',
+            purpose: 'referral_bonus',
+            description: 'Friend registered using your referral code'
+          });
+        }
+      }
     }
 
     // Delete OTP record after successful verification
@@ -113,6 +156,11 @@ exports.verifyOtp = async (req, res) => {
     // Generate tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
+
+    // Add to active sessions
+    user.activeSessions = user.activeSessions || [];
+    user.activeSessions.push(refreshToken);
+    await user.save();
 
     // Set refresh token in cookie
     res.cookie('refreshToken', refreshToken, {
@@ -184,6 +232,11 @@ exports.login = async (req, res) => {
     // Generate tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
+
+    // Add to active sessions
+    user.activeSessions = user.activeSessions || [];
+    user.activeSessions.push(refreshToken);
+    await user.save();
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -264,7 +317,7 @@ exports.refreshToken = async (req, res) => {
 
     const decoded = verifyRefreshToken(token);
     const user = await User.findById(decoded.id);
-    if (!user) {
+    if (!user || !user.activeSessions.includes(token)) {
       return errorResponse(res, 'Invalid refresh token', 401);
     }
 
@@ -276,7 +329,32 @@ exports.refreshToken = async (req, res) => {
   }
 };
 
-exports.logout = (req, res) => {
-  res.clearCookie('refreshToken');
-  return successResponse(res, 'Logged out successfully');
+exports.logout = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken || req.body.refreshToken;
+    if (token) {
+      const decoded = verifyRefreshToken(token);
+      await User.findByIdAndUpdate(decoded.id, {
+        $pull: { activeSessions: token }
+      });
+    }
+    res.clearCookie('refreshToken');
+    return successResponse(res, 'Logged out successfully');
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.logoutAll = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (user) {
+      user.activeSessions = [];
+      await user.save();
+    }
+    res.clearCookie('refreshToken');
+    return successResponse(res, 'Logged out from all devices successfully');
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
 };

@@ -15,6 +15,10 @@ const restaurantSchema = new mongoose.Schema(
     coverImage: {
       type: String,
     },
+    gallery: {
+      type: [String],
+      default: [],
+    },
     logo: {
       type: String,
     },
@@ -62,8 +66,24 @@ const restaurantSchema = new mongoose.Schema(
         required: true,
       },
     },
+    phone: {
+      type: String,
+    },
     aboutUs: {
       type: String,
+    },
+    fssaiNumber: {
+      type: String,
+    },
+    openingTime: {
+      type: String, // e.g., '09:00'
+    },
+    closingTime: {
+      type: String, // e.g., '22:00'
+    },
+    isSponsored: {
+      type: Boolean,
+      default: false,
     },
     isApproved: {
       type: Boolean,

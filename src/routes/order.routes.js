@@ -12,8 +12,8 @@ router.use(authenticate, authorize('customer'));
 router.post(
   '/checkout',
   [
-    check('addressId', 'Address ID is required').notEmpty(),
-    check('paymentMethod', 'Payment Method is required (card, upi, cod)').isIn(['card', 'upi', 'cod']),
+    check('deliveryAddress', 'Delivery Address is required').isObject(),
+    check('paymentMethod', 'Payment Method is required (card, upi, cod, wallet)').isIn(['card', 'upi', 'cod', 'wallet']),
   ],
   validate,
   orderController.checkout

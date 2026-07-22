@@ -78,9 +78,9 @@ curl -X POST http://localhost:6030/api/auth/reset-password \
 curl -X POST http://localhost:6030/api/auth/refresh-token
 ```
 
-**Logout**
+**Logout All Devices**
 ```bash
-curl -X POST http://localhost:6030/api/auth/logout \
+curl -X POST http://localhost:6030/api/auth/logout-all \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -166,9 +166,10 @@ curl -X GET http://localhost:6030/api/restaurants/fastest
 curl -X GET http://localhost:6030/api/restaurants/popular
 ```
 
-**Search Restaurants (by ?q=keyword)**
+**Search Restaurants (Advanced)**
 ```bash
-curl -X GET http://localhost:6030/api/restaurants/search?q=burger
+curl -X GET "http://localhost:6030/api/restaurants/search?q=burger&isVeg=true&minRating=4&freeDelivery=true&sort=delivery_time" \
+-H "Authorization: Bearer <TOKEN>"
 ```
 
 **Get Restaurant Detail**
@@ -195,10 +196,11 @@ curl -X GET http://localhost:6030/api/cart \
 ```
 
 **Add Item to Cart**
+*(Note: Automatically calculates taxes, platformFee, smallOrderFee, and surgeFee)*
 ```bash
 curl -X POST http://localhost:6030/api/cart \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
--d '{"menuItemId":"<menuId>","quantity":1,"restaurantId":"<restaurantId>"}'
+-d '{"menuItemId":"<menuId>","quantity":1}'
 ```
 
 **Update Cart Item Quantity**
@@ -255,7 +257,21 @@ curl -X PUT http://localhost:6030/api/notifications/read-all \
 ```bash
 curl -X POST http://localhost:6030/api/order/checkout \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
--d '{"addressId":"<addressId>","paymentMethod":"card"}'
+-d '{
+  "deliveryAddress": {
+    "label": "Home",
+    "street": "123 Main St",
+    "city": "Mumbai",
+    "zip": "400001",
+    "location": {
+      "type": "Point",
+      "coordinates": [72.8777, 19.0760]
+    }
+  },
+  "paymentMethod": "card",
+  "deliveryInstructions": "Leave at the door",
+  "isScheduled": false
+}'
 ```
 
 **Mock Payment Charge**
@@ -304,6 +320,16 @@ curl -X GET http://localhost:6030/api/order/<orderId>/help \
 
 ### 8. Static Content (`/api/static`)
 
+**Get Banners**
+```bash
+curl -X GET http://localhost:6030/api/static/banners
+```
+
+**Get App Config**
+```bash
+curl -X GET http://localhost:6030/api/static/app-config
+```
+
 **About Us**
 ```bash
 curl -X GET http://localhost:6030/api/static/about
@@ -317,4 +343,78 @@ curl -X GET http://localhost:6030/api/static/faq
 **Terms & Conditions**
 ```bash
 curl -X GET http://localhost:6030/api/static/terms
+```
+
+### 10. Wallet (`/api/wallet`)
+
+**Get Wallet Balance**
+```bash
+curl -X GET http://localhost:6030/api/wallet \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Get Wallet Transactions**
+```bash
+curl -X GET http://localhost:6030/api/wallet/transactions \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Add Money to Wallet**
+```bash
+curl -X POST http://localhost:6030/api/wallet/add \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"amount": 500}'
+```
+
+*(You can now pass `"paymentMethod": "wallet"` in the `/api/order/checkout` endpoint to pay using your wallet balance!)*
+
+### 11. Coupons & Offers (`/api/coupons`)
+
+**Get Available Coupons**
+```bash
+curl -X GET http://localhost:6030/api/coupons \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Apply Coupon to Cart**
+```bash
+curl -X POST http://localhost:6030/api/coupons/apply \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"code": "WELCOME50"}'
+```
+
+### 12. Membership Plans (Loyalty) (`/api/membership`)
+
+**Get All Active Plans**
+```bash
+curl -X GET http://localhost:6030/api/membership
+```
+
+**Subscribe to a Plan**
+```bash
+curl -X POST http://localhost:6030/api/membership/subscribe \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"planId": "<planId>"}'
+```
+
+### 13. Customer Support Tickets (`/api/tickets`)
+
+**Create a Support Ticket**
+```bash
+curl -X POST http://localhost:6030/api/tickets \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"subject": "Order Missing Items", "description": "My burger was missing from order #1234", "orderId": "<orderId>"}'
+```
+
+**Get My Tickets**
+```bash
+curl -X GET http://localhost:6030/api/tickets \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Reply to a Ticket**
+```bash
+curl -X POST http://localhost:6030/api/tickets/<ticketId>/reply \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"message": "I also forgot to mention I did not receive the fries."}'
 ```

@@ -69,6 +69,16 @@ const orderSchema = new mongoose.Schema(
         },
       },
     },
+    deliveryInstructions: {
+      type: String,
+    },
+    isScheduled: {
+      type: Boolean,
+      default: false,
+    },
+    scheduleTime: {
+      type: Date,
+    },
     paymentMethod: {
       type: String,
       enum: ['card', 'upi', 'cod'],
@@ -82,6 +92,7 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: [
         'placed',
+        'payment_confirmed',
         'accepted',
         'rejected',
         'preparing',
@@ -91,6 +102,7 @@ const orderSchema = new mongoose.Schema(
         'out_for_delivery',
         'delivered',
         'cancelled',
+        'refunded'
       ],
       default: 'placed',
     },
@@ -98,6 +110,33 @@ const orderSchema = new mongoose.Schema(
     totalAmount: {
       type: Number,
       required: true,
+    },
+    deliveryFee: {
+      type: Number,
+      default: 0,
+    },
+    taxes: {
+      type: Number,
+      default: 0,
+    },
+    platformFee: {
+      type: Number,
+      default: 0,
+    },
+    smallOrderFee: {
+      type: Number,
+      default: 0,
+    },
+    surgeFee: {
+      type: Number,
+      default: 0,
+    },
+    discountAmount: {
+      type: Number,
+      default: 0,
+    },
+    deliveryOtp: {
+      type: String,
     },
     deliveryFeeEarned: Number,
     estimatedDeliveryTime: Date,
