@@ -78,6 +78,12 @@ curl -X POST http://localhost:6030/api/auth/reset-password \
 curl -X POST http://localhost:6030/api/auth/refresh-token
 ```
 
+**Logout Current Device**
+```bash
+curl -X POST http://localhost:6030/api/auth/logout \
+-H "Authorization: Bearer <TOKEN>"
+```
+
 **Logout All Devices**
 ```bash
 curl -X POST http://localhost:6030/api/auth/logout-all \
@@ -205,14 +211,20 @@ curl -X POST http://localhost:6030/api/cart \
 
 **Update Cart Item Quantity**
 ```bash
-curl -X PUT http://localhost:6030/api/cart \
+curl -X PUT http://localhost:6030/api/cart/<menuItemId> \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
--d '{"menuItemId":"<menuId>","quantity":2}'
+-d '{"quantity":2}'
 ```
 
 **Delete Item from Cart**
 ```bash
 curl -X DELETE http://localhost:6030/api/cart/<menuItemId> \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Clear Entire Cart**
+```bash
+curl -X DELETE http://localhost:6030/api/cart \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
