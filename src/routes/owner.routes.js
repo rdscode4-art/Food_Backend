@@ -22,19 +22,19 @@ router.post(
   ownerController.createRestaurant
 );
 
-// Get own restaurant (does not require approval to view pending status)
-router.get('/restaurant', ownerController.getOwnRestaurant);
+// Get all own restaurants (branches)
+router.get('/restaurants', ownerController.getOwnRestaurants);
 
 // All subsequent routes require the restaurant owner to be approved by admin
 router.use(requireApproval);
 
 // Restaurant management
-router.put('/restaurant', ownerController.updateRestaurant);
-router.put('/restaurant/toggle-active', ownerController.toggleActiveStatus);
+router.put('/restaurant/:restaurantId', ownerController.updateRestaurant);
+router.put('/restaurant/:restaurantId/toggle-active', ownerController.toggleActiveStatus);
 
 // Menu management
 router.post(
-  '/restaurant/menu',
+  '/restaurant/:restaurantId/menu',
   [
     check('name', 'Name is required').notEmpty(),
     check('price', 'Price is required').isNumeric(),
@@ -43,19 +43,19 @@ router.post(
   validate,
   ownerController.createMenuItem
 );
-router.get('/restaurant/menu', ownerController.getMenu);
-router.put('/restaurant/menu/:itemId', ownerController.updateMenuItem);
-router.delete('/restaurant/menu/:itemId', ownerController.deleteMenuItem);
-router.put('/restaurant/menu/:itemId/toggle-availability', ownerController.toggleMenuItemAvailability);
+router.get('/restaurant/:restaurantId/menu', ownerController.getMenu);
+router.put('/restaurant/:restaurantId/menu/:itemId', ownerController.updateMenuItem);
+router.delete('/restaurant/:restaurantId/menu/:itemId', ownerController.deleteMenuItem);
+router.put('/restaurant/:restaurantId/menu/:itemId/toggle-availability', ownerController.toggleMenuItemAvailability);
 
 // Order management
-router.get('/orders', ownerController.getOrders);
-router.put('/orders/:id/accept', ownerController.acceptOrder);
-router.put('/orders/:id/reject', ownerController.rejectOrder);
-router.put('/orders/:id/preparing', ownerController.prepareOrder);
-router.put('/orders/:id/ready', ownerController.readyOrder);
+router.get('/restaurant/:restaurantId/orders', ownerController.getOrders);
+router.put('/restaurant/:restaurantId/orders/:id/accept', ownerController.acceptOrder);
+router.put('/restaurant/:restaurantId/orders/:id/reject', ownerController.rejectOrder);
+router.put('/restaurant/:restaurantId/orders/:id/preparing', ownerController.prepareOrder);
+router.put('/restaurant/:restaurantId/orders/:id/ready', ownerController.readyOrder);
 
 // Dashboard
-router.get('/dashboard', ownerController.getDashboardStats);
+router.get('/restaurant/:restaurantId/dashboard', ownerController.getDashboardStats);
 
 module.exports = router;

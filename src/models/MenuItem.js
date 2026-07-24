@@ -55,12 +55,20 @@ const menuItemSchema = new mongoose.Schema(
         price: Number,
       }
     ],
-    addons: [
+      addons: [
       {
         name: String, // e.g., 'Extra Cheese'
         price: Number,
       }
     ],
+    stockCount: {
+      type: Number,
+      default: null, // null means infinite stock
+    },
+    autoDisableOnEmpty: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

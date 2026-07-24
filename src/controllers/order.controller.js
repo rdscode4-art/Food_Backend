@@ -10,12 +10,16 @@ exports.checkout = async (req, res) => {
   try {
     const { deliveryAddress, paymentMethod, deliveryInstructions, isScheduled, scheduleTime } = req.body;
 
-    const cart = await Cart.findOne({ user: req.user._id }).populate('restaurant');
+    const cart = await Cart.findOne({ user: req.user._id })
+      .populate('restaurant')
+      .populate('items.menuItem'); // Need details for stock check
+      
     if (!cart || cart.items.length === 0) {
       return errorResponse(res, 'Cart is empty', 400);
     }
 
     const User = require('../models/User');
+    const MenuItem = require('../models/MenuItem');
     const WalletTransaction = require('../models/WalletTransaction');
     
     // We populate currentMembership to apply free delivery
@@ -34,12 +38,41 @@ exports.checkout = async (req, res) => {
       walletDeducted = cart.totalAmount;
     }
 
+    // Stock Verification & Deduction
+    for (const item of cart.items) {
+      if (item.menuItem && typeof item.menuItem.stockCount === 'number') {
+        if (item.menuItem.stockCount < item.quantity) {
+          return errorResponse(res, `Not enough stock for ${item.menuItem.name}. Only ${item.menuItem.stockCount} left.`, 400);
+        }
+      }
+    }
+
+    // Deduct stock now
+    for (const item of cart.items) {
+      if (item.menuItem && typeof item.menuItem.stockCount === 'number') {
+        item.menuItem.stockCount -= item.quantity;
+        if (item.menuItem.stockCount <= 0 && item.menuItem.autoDisableOnEmpty) {
+          item.menuItem.isAvailable = false;
+        }
+        await item.menuItem.save();
+      }
+    }
+
     const deliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();
+
+    // Map cart items back to format expected by Order (saving refs)
+    const orderItems = cart.items.map(item => ({
+      menuItem: item.menuItem._id,
+      quantity: item.quantity,
+      price: item.price,
+      selectedVariants: item.selectedVariants,
+      selectedAddons: item.selectedAddons,
+    }));
 
     const order = await Order.create({
       user: req.user._id,
       restaurant: cart.restaurant._id,
-      items: cart.items,
+      items: orderItems,
       deliveryAddress: deliveryAddress,
       paymentMethod: paymentMethod,
       totalAmount: cart.totalAmount,

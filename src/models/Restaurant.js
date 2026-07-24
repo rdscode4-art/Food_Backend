@@ -12,6 +12,10 @@ const restaurantSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    brandName: {
+      type: String, // For multi-branch grouping
+      trim: true,
+    },
     coverImage: {
       type: String,
     },
@@ -92,6 +96,33 @@ const restaurantSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    status: {
+      type: String,
+      enum: ['Open', 'Closed', 'Busy', 'Temporarily Closed', 'Vacation Mode'],
+      default: 'Closed',
+    },
+    // KYC & Documents
+    gstNumber: {
+      type: String,
+    },
+    panNumber: {
+      type: String,
+    },
+    aadhaarNumber: {
+      type: String,
+    },
+    bankDetails: {
+      accountNumber: String,
+      ifscCode: String,
+      bankName: String,
+      accountHolderName: String,
+    },
+    cancelledChequeImage: {
+      type: String,
+    },
+    licenseImage: {
+      type: String,
     },
   },
   { timestamps: true }

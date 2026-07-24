@@ -12,28 +12,25 @@ const { successResponse, errorResponse } = require('../utils/apiResponse');
 
 exports.createRestaurant = async (req, res) => {
   try {
-    const existingRestaurant = await Restaurant.findOne({ owner: req.user._id });
-    if (existingRestaurant) {
-      return errorResponse(res, 'You already have a restaurant registered', 409);
-    }
+    // We removed the strict check for existing restaurant to allow Multi-Branch logic.
+    // If an owner wants to group branches, they can send the same 'brandName' in req.body.
 
-    // Overwrite the owner just in case
     const restaurantData = { ...req.body, owner: req.user._id, isApproved: false };
     const restaurant = await Restaurant.create(restaurantData);
 
-    return successResponse(res, 'Restaurant created successfully. Pending admin approval.', restaurant, 201);
+    return successResponse(res, 'Restaurant (Branch) created successfully. Pending admin approval.', restaurant, 201);
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
 };
 
-exports.getOwnRestaurant = async (req, res) => {
+exports.getOwnRestaurants = async (req, res) => {
   try {
-    const restaurant = await Restaurant.findOne({ owner: req.user._id }).populate('categories', 'name icon');
-    if (!restaurant) {
-      return errorResponse(res, 'No restaurant found for this owner', 404);
+    const restaurants = await Restaurant.find({ owner: req.user._id }).populate('categories', 'name icon');
+    if (!restaurants || restaurants.length === 0) {
+      return errorResponse(res, 'No restaurants found for this owner', 404);
     }
-    return successResponse(res, 'Restaurant details fetched', restaurant);
+    return successResponse(res, 'Restaurants fetched', restaurants);
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
@@ -41,17 +38,18 @@ exports.getOwnRestaurant = async (req, res) => {
 
 exports.updateRestaurant = async (req, res) => {
   try {
+    const { restaurantId } = req.params;
     // Prevent overriding restricted fields
-    const { owner, isApproved, isActive, rating, reviewCount, ...updateData } = req.body;
+    const { owner, isApproved, rating, reviewCount, ...updateData } = req.body;
     
     const restaurant = await Restaurant.findOneAndUpdate(
-      { owner: req.user._id },
+      { _id: restaurantId, owner: req.user._id },
       updateData,
       { returnDocument: 'after' }
     );
 
     if (!restaurant) {
-      return errorResponse(res, 'Restaurant not found', 404);
+      return errorResponse(res, 'Restaurant not found or unauthorized', 404);
     }
 
     return successResponse(res, 'Restaurant updated successfully', restaurant);
@@ -62,15 +60,25 @@ exports.updateRestaurant = async (req, res) => {
 
 exports.toggleActiveStatus = async (req, res) => {
   try {
-    const restaurant = await Restaurant.findOne({ owner: req.user._id });
+    const { restaurantId } = req.params;
+    const { status } = req.body; // Expecting 'Open', 'Closed', 'Busy', etc.
+
+    const restaurant = await Restaurant.findOne({ _id: restaurantId, owner: req.user._id });
     if (!restaurant) {
       return errorResponse(res, 'Restaurant not found', 404);
     }
 
-    restaurant.isActive = !restaurant.isActive;
+    if (status) {
+      restaurant.status = status;
+      restaurant.isActive = status === 'Open' || status === 'Busy';
+    } else {
+      // Toggle logic fallback
+      restaurant.isActive = !restaurant.isActive;
+      restaurant.status = restaurant.isActive ? 'Open' : 'Closed';
+    }
     await restaurant.save();
 
-    return successResponse(res, `Restaurant is now ${restaurant.isActive ? 'active' : 'paused'}`);
+    return successResponse(res, `Restaurant status updated to ${restaurant.status}`);
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
@@ -80,18 +88,19 @@ exports.toggleActiveStatus = async (req, res) => {
 // MENU MANAGEMENT
 // ========================
 
-// Helper to verify item belongs to owner's restaurant
-const getOwnerRestaurantId = async (ownerId) => {
-  const restaurant = await Restaurant.findOne({ owner: ownerId });
+// Helper to verify item belongs to owner's specific restaurant branch
+const verifyOwnerRestaurant = async (ownerId, restaurantId) => {
+  const restaurant = await Restaurant.findOne({ _id: restaurantId, owner: ownerId });
   return restaurant ? restaurant._id : null;
 };
 
 exports.createMenuItem = async (req, res) => {
   try {
-    const restaurantId = await getOwnerRestaurantId(req.user._id);
-    if (!restaurantId) return errorResponse(res, 'Restaurant not found for this owner', 404);
+    const { restaurantId } = req.params;
+    const validRestaurantId = await verifyOwnerRestaurant(req.user._id, restaurantId);
+    if (!validRestaurantId) return errorResponse(res, 'Restaurant not found for this owner', 404);
 
-    const menuItemData = { ...req.body, restaurant: restaurantId };
+    const menuItemData = { ...req.body, restaurant: validRestaurantId };
     const menuItem = await MenuItem.create(menuItemData);
 
     return successResponse(res, 'Menu item created successfully', menuItem, 201);
@@ -102,10 +111,11 @@ exports.createMenuItem = async (req, res) => {
 
 exports.getMenu = async (req, res) => {
   try {
-    const restaurantId = await getOwnerRestaurantId(req.user._id);
-    if (!restaurantId) return errorResponse(res, 'Restaurant not found for this owner', 404);
+    const { restaurantId } = req.params;
+    const validRestaurantId = await verifyOwnerRestaurant(req.user._id, restaurantId);
+    if (!validRestaurantId) return errorResponse(res, 'Restaurant not found for this owner', 404);
 
-    const menu = await MenuItem.find({ restaurant: restaurantId });
+    const menu = await MenuItem.find({ restaurant: validRestaurantId });
     return successResponse(res, 'Menu fetched successfully', menu);
   } catch (error) {
     return errorResponse(res, error.message, 500);
@@ -114,14 +124,14 @@ exports.getMenu = async (req, res) => {
 
 exports.updateMenuItem = async (req, res) => {
   try {
-    const { itemId } = req.params;
-    const restaurantId = await getOwnerRestaurantId(req.user._id);
-    if (!restaurantId) return errorResponse(res, 'Restaurant not found for this owner', 404);
+    const { restaurantId, itemId } = req.params;
+    const validRestaurantId = await verifyOwnerRestaurant(req.user._id, restaurantId);
+    if (!validRestaurantId) return errorResponse(res, 'Restaurant not found for this owner', 404);
 
     // Ensure they only update their own item
     const { restaurant, ...updateData } = req.body; // prevent re-assigning restaurant
     const menuItem = await MenuItem.findOneAndUpdate(
-      { _id: itemId, restaurant: restaurantId },
+      { _id: itemId, restaurant: validRestaurantId },
       updateData,
       { returnDocument: 'after' }
     );
@@ -136,15 +146,14 @@ exports.updateMenuItem = async (req, res) => {
 
 exports.deleteMenuItem = async (req, res) => {
   try {
-    const { itemId } = req.params;
-    const restaurantId = await getOwnerRestaurantId(req.user._id);
-    if (!restaurantId) return errorResponse(res, 'Restaurant not found for this owner', 404);
+    const { restaurantId, itemId } = req.params;
+    const validRestaurantId = await verifyOwnerRestaurant(req.user._id, restaurantId);
+    if (!validRestaurantId) return errorResponse(res, 'Restaurant not found for this owner', 404);
 
-    const menuItem = await MenuItem.findOne({ _id: itemId, restaurant: restaurantId });
+    const menuItem = await MenuItem.findOne({ _id: itemId, restaurant: validRestaurantId });
     if (!menuItem) return errorResponse(res, 'Menu item not found in your restaurant', 404);
 
     // Soft delete vs Hard delete logic based on past orders
-    // Since Order model isn't fully integrated yet, we will wrap in try/catch or just mock
     let isInPastOrder = false;
     try {
       if (Order && Order.exists) {
@@ -170,11 +179,11 @@ exports.deleteMenuItem = async (req, res) => {
 
 exports.toggleMenuItemAvailability = async (req, res) => {
   try {
-    const { itemId } = req.params;
-    const restaurantId = await getOwnerRestaurantId(req.user._id);
-    if (!restaurantId) return errorResponse(res, 'Restaurant not found for this owner', 404);
+    const { restaurantId, itemId } = req.params;
+    const validRestaurantId = await verifyOwnerRestaurant(req.user._id, restaurantId);
+    if (!validRestaurantId) return errorResponse(res, 'Restaurant not found for this owner', 404);
 
-    const menuItem = await MenuItem.findOne({ _id: itemId, restaurant: restaurantId });
+    const menuItem = await MenuItem.findOne({ _id: itemId, restaurant: validRestaurantId });
     if (!menuItem) return errorResponse(res, 'Menu item not found in your restaurant', 404);
 
     menuItem.isAvailable = !menuItem.isAvailable;
@@ -192,10 +201,11 @@ exports.toggleMenuItemAvailability = async (req, res) => {
 
 exports.getOrders = async (req, res) => {
   try {
-    const restaurantId = await getOwnerRestaurantId(req.user._id);
-    if (!restaurantId) return errorResponse(res, 'Restaurant not found', 404);
+    const { restaurantId } = req.params;
+    const validRestaurantId = await verifyOwnerRestaurant(req.user._id, restaurantId);
+    if (!validRestaurantId) return errorResponse(res, 'Restaurant not found', 404);
 
-    const orders = await Order.find({ restaurant: restaurantId })
+    const orders = await Order.find({ restaurant: validRestaurantId })
       .populate('user', 'name phone')
       .populate('items.menuItem', 'name')
       .sort({ createdAt: -1 });
@@ -208,11 +218,11 @@ exports.getOrders = async (req, res) => {
 
 exports.acceptOrder = async (req, res) => {
   try {
-    const { id } = req.params;
-    const restaurantId = await getOwnerRestaurantId(req.user._id);
-    if (!restaurantId) return errorResponse(res, 'Restaurant not found', 404);
+    const { restaurantId, id } = req.params;
+    const validRestaurantId = await verifyOwnerRestaurant(req.user._id, restaurantId);
+    if (!validRestaurantId) return errorResponse(res, 'Restaurant not found', 404);
 
-    const order = await Order.findOne({ _id: id, restaurant: restaurantId });
+    const order = await Order.findOne({ _id: id, restaurant: validRestaurantId });
     if (!order) return errorResponse(res, 'Order not found', 404);
 
     if (order.status !== 'placed') {
@@ -238,12 +248,12 @@ exports.acceptOrder = async (req, res) => {
 
 exports.rejectOrder = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { restaurantId, id } = req.params;
     const { reason } = req.body;
-    const restaurantId = await getOwnerRestaurantId(req.user._id);
-    if (!restaurantId) return errorResponse(res, 'Restaurant not found', 404);
+    const validRestaurantId = await verifyOwnerRestaurant(req.user._id, restaurantId);
+    if (!validRestaurantId) return errorResponse(res, 'Restaurant not found', 404);
 
-    const order = await Order.findOne({ _id: id, restaurant: restaurantId });
+    const order = await Order.findOne({ _id: id, restaurant: validRestaurantId });
     if (!order) return errorResponse(res, 'Order not found', 404);
 
     if (order.status !== 'placed') {
@@ -273,9 +283,9 @@ exports.rejectOrder = async (req, res) => {
 
 exports.prepareOrder = async (req, res) => {
   try {
-    const { id } = req.params;
-    const restaurantId = await getOwnerRestaurantId(req.user._id);
-    const order = await Order.findOne({ _id: id, restaurant: restaurantId });
+    const { restaurantId, id } = req.params;
+    const validRestaurantId = await verifyOwnerRestaurant(req.user._id, restaurantId);
+    const order = await Order.findOne({ _id: id, restaurant: validRestaurantId });
     if (!order || order.status !== 'accepted') return errorResponse(res, 'Order not in accepted state', 400);
 
     order.status = 'preparing';
@@ -290,9 +300,9 @@ exports.prepareOrder = async (req, res) => {
 
 exports.readyOrder = async (req, res) => {
   try {
-    const { id } = req.params;
-    const restaurantId = await getOwnerRestaurantId(req.user._id);
-    const order = await Order.findOne({ _id: id, restaurant: restaurantId });
+    const { restaurantId, id } = req.params;
+    const validRestaurantId = await verifyOwnerRestaurant(req.user._id, restaurantId);
+    const order = await Order.findOne({ _id: id, restaurant: validRestaurantId });
     if (!order || order.status !== 'preparing') return errorResponse(res, 'Order not in preparing state', 400);
 
     order.status = 'ready_for_pickup';
@@ -314,31 +324,32 @@ exports.readyOrder = async (req, res) => {
 
 exports.getDashboardStats = async (req, res) => {
   try {
-    const restaurantId = await getOwnerRestaurantId(req.user._id);
-    if (!restaurantId) return errorResponse(res, 'Restaurant not found', 404);
+    const { restaurantId } = req.params;
+    const validRestaurantId = await verifyOwnerRestaurant(req.user._id, restaurantId);
+    if (!validRestaurantId) return errorResponse(res, 'Restaurant not found', 404);
 
-    const totalOrders = await Order.countDocuments({ restaurant: restaurantId, status: { $ne: 'cancelled' } });
-    const cancelledOrders = await Order.countDocuments({ restaurant: restaurantId, status: 'cancelled' });
+    const totalOrders = await Order.countDocuments({ restaurant: validRestaurantId, status: { $ne: 'cancelled' } });
+    const cancelledOrders = await Order.countDocuments({ restaurant: validRestaurantId, status: 'cancelled' });
     const activeOrders = await Order.countDocuments({
-      restaurant: restaurantId,
+      restaurant: validRestaurantId,
       status: { $in: ['pending', 'accepted', 'preparing', 'ready_for_pickup', 'out_for_delivery'] }
     });
 
     const revenueAggregation = await Order.aggregate([
-      { $match: { restaurant: restaurantId, status: 'delivered' } },
+      { $match: { restaurant: validRestaurantId, status: 'delivered' } },
       { $group: { _id: null, totalRevenue: { $sum: '$totalAmount' } } }
     ]);
     const totalRevenue = revenueAggregation.length > 0 ? revenueAggregation[0].totalRevenue : 0;
 
     const topItemsAggregation = await Order.aggregate([
-      { $match: { restaurant: restaurantId, status: { $ne: 'cancelled' } } },
+      { $match: { restaurant: validRestaurantId, status: { $ne: 'cancelled' } } },
       { $unwind: '$items' },
       { $group: { _id: '$items.menuItem', totalQuantity: { $sum: '$items.quantity' } } },
       { $sort: { totalQuantity: -1 } },
       { $limit: 5 },
       {
         $lookup: {
-          from: 'menuitems', // exact collection name might vary depending on mongoose (usually lowercased + s)
+          from: 'menuitems',
           localField: '_id',
           foreignField: '_id',
           as: 'menuItemDetails'
