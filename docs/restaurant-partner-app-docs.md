@@ -13,11 +13,13 @@ This document outlines all the APIs and frontend implementation notes required t
    - Emit a `join` event with `restaurant_<RESTAURANT_ID>` (the specific syntax can be tailored based on your socket initialization logic, currently it targets the user ID of the owner and potentially a restaurant room).
    - When a new order is placed, an `order_update` event will be emitted. The app should ideally play an audio chime and show a prominent alert to the staff to accept or reject the order immediately.
 
-3. **Menu Management Soft-Deletes:**
-   - When an owner tries to delete a menu item (`DELETE /api/owner/restaurant/menu/:itemId`), the API determines if it should be hard-deleted or soft-deleted (marked `isAvailable: false`) based on whether it appears in past orders to preserve order history integrity.
+3. **Menu Management & Inventory:**
+   - Menu items can be soft-deleted automatically if they exist in past orders.
+   - Inventory tracking: You can pass `stockCount` and `autoDisableOnEmpty`. The backend deducts stock on order checkout automatically.
 
-4. **Dashboard Data:**
-   - The `/api/owner/dashboard` endpoint returns pre-calculated aggregation pipelines for total revenue, active orders, and top-selling items. Use this data to render charts (e.g., Chart.js or Recharts).
+4. **Multi-Branch Support:**
+   - A single owner can create multiple restaurants (branches) by sending the same `brandName`.
+   - All management APIs (Menu, Orders, Dashboard, Coupons) now require `:restaurantId` in the path.
 
 ---
 
@@ -48,56 +50,64 @@ curl -X POST http://localhost:6030/api/auth/login \
 
 ### 2. Restaurant Profile Management
 
-**Create Restaurant Profile (Once per owner)**
+**Create Restaurant Profile (Branch)**
 ```bash
 curl -X POST http://localhost:6030/api/owner/restaurant \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
--d '{"name":"Jane Burger Shop","address":"456 Food Ave","location":{"type":"Point","coordinates":[77.2,28.7]},"deliveryFee":30,"minOrder":100}'
+-d '{"name":"Jane Burger Shop","brandName":"Jane Burgers","address":"456 Food Ave","location":{"type":"Point","coordinates":[77.2,28.7]},"deliveryFee":30,"minOrder":100}'
 ```
 
-**Get Restaurant Profile**
+**Get All Own Restaurants (Branches)**
 ```bash
-curl -X GET http://localhost:6030/api/owner/restaurant \
+curl -X GET http://localhost:6030/api/owner/restaurants \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Update Restaurant Details**
 ```bash
-curl -X PUT http://localhost:6030/api/owner/restaurant \
+curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId> \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"deliveryTime":35}'
 ```
 
-**Toggle Restaurant Active Status (Pause incoming orders)**
+**Toggle Restaurant Active Status**
 ```bash
-curl -X PUT http://localhost:6030/api/owner/restaurant/toggle-active \
--H "Authorization: Bearer <TOKEN>"
+curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/toggle-active \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"status":"Open"}'
 ```
 
 ### 3. Menu Management
 
 **Add Menu Item**
 ```bash
-curl -X POST http://localhost:6030/api/owner/restaurant/menu \
+curl -X POST http://localhost:6030/api/owner/restaurant/<restaurantId>/menu \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
--d '{"name":"Cheese Burger","price":150,"category":"Burgers"}'
+-d '{"name":"Cheese Burger","price":150,"category":"Burgers","stockCount":50,"autoDisableOnEmpty":true}'
 ```
 
 **Get Menu Items**
 ```bash
-curl -X GET http://localhost:6030/api/owner/restaurant/menu \
+curl -X GET http://localhost:6030/api/owner/restaurant/<restaurantId>/menu \
 -H "Authorization: Bearer <TOKEN>"
+```
+
+**Update Menu Item**
+```bash
+curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/menu/<itemId> \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"price": 160}'
 ```
 
 **Delete Menu Item (Handles soft/hard delete automatically)**
 ```bash
-curl -X DELETE http://localhost:6030/api/owner/restaurant/menu/<itemId> \
+curl -X DELETE http://localhost:6030/api/owner/restaurant/<restaurantId>/menu/<itemId> \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Toggle Item Availability (Out of stock)**
 ```bash
-curl -X PUT http://localhost:6030/api/owner/restaurant/menu/<itemId>/toggle-availability \
+curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/menu/<itemId>/toggle-availability \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -105,32 +115,32 @@ curl -X PUT http://localhost:6030/api/owner/restaurant/menu/<itemId>/toggle-avai
 
 **Get All Incoming Orders**
 ```bash
-curl -X GET http://localhost:6030/api/owner/orders \
+curl -X GET http://localhost:6030/api/owner/restaurant/<restaurantId>/orders \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Accept Order**
 ```bash
-curl -X PUT http://localhost:6030/api/owner/orders/<orderId>/accept \
+curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/orders/<orderId>/accept \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Reject Order (Triggers Refund)**
 ```bash
-curl -X PUT http://localhost:6030/api/owner/orders/<orderId>/reject \
+curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/orders/<orderId>/reject \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"reason":"Item out of stock"}'
 ```
 
 **Mark as Preparing**
 ```bash
-curl -X PUT http://localhost:6030/api/owner/orders/<orderId>/preparing \
+curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/orders/<orderId>/preparing \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Mark as Ready for Pickup (Releases job to Delivery Partners)**
 ```bash
-curl -X PUT http://localhost:6030/api/owner/orders/<orderId>/ready \
+curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/orders/<orderId>/ready \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -138,6 +148,42 @@ curl -X PUT http://localhost:6030/api/owner/orders/<orderId>/ready \
 
 **Get Dashboard Stats**
 ```bash
-curl -X GET http://localhost:6030/api/owner/dashboard \
+curl -X GET http://localhost:6030/api/owner/restaurant/<restaurantId>/dashboard \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+### 6. Vendor Coupons
+
+**Create a Vendor Coupon**
+```bash
+curl -X POST http://localhost:6030/api/owner/<restaurantId>/coupons \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"code":"JANE20","discountType":"percentage","discountValue":20,"startDate":"2023-12-01T00:00:00Z","expiryDate":"2024-12-31T23:59:59Z"}'
+```
+
+**Get Vendor Coupons**
+```bash
+curl -X GET http://localhost:6030/api/owner/<restaurantId>/coupons \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Update Vendor Coupon**
+```bash
+curl -X PUT http://localhost:6030/api/owner/<restaurantId>/coupons/<couponId> \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"isActive":false}'
+```
+
+**Delete Vendor Coupon**
+```bash
+curl -X DELETE http://localhost:6030/api/owner/<restaurantId>/coupons/<couponId> \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+### 7. Vendor Settlements
+
+**Get Settlement History**
+```bash
+curl -X GET http://localhost:6030/api/owner/<restaurantId>/settlements \
 -H "Authorization: Bearer <TOKEN>"
 ```
