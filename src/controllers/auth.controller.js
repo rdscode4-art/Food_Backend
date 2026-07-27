@@ -86,8 +86,15 @@ exports.signup = (req, res) => {
 };
 
 exports.signupRestaurantOwner = (req, res) => {
-  const { businessName } = req.body;
-  return registerUser(req, res, 'restaurant_owner', { businessName });
+  const { businessName, businessDocuments, fssai, gst, panNumber, bankDetails } = req.body;
+  return registerUser(req, res, 'restaurant_owner', { 
+    businessName, 
+    businessDocuments, 
+    fssai, 
+    gst, 
+    panNumber, 
+    bankDetails 
+  });
 };
 
 exports.signupDeliveryPartner = (req, res) => {
@@ -123,7 +130,12 @@ exports.verifyOtp = async (req, res) => {
         const referrer = await User.findById(user.referredBy);
         if (referrer) {
           const WalletTransaction = require('../models/WalletTransaction');
-          const bonusAmount = 50;
+          const AppConfig = require('../models/AppConfig');
+          let bonusAmount = 50;
+          const config = await AppConfig.findOne({ key: 'REFERRAL_REWARD_AMOUNT' });
+          if (config && config.value) {
+            bonusAmount = Number(config.value) || 50;
+          }
 
           // Reward new user
           user.walletBalance = (user.walletBalance || 0) + bonusAmount;

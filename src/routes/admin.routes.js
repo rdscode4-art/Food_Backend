@@ -24,11 +24,21 @@ router.put('/restaurants/:id/approve', adminController.approveRestaurant);
 router.put('/restaurants/:id/reject', adminController.rejectRestaurant);
 router.get('/restaurants/:id/orders', adminController.getRestaurantOrders);
 
+// Orders
+router.put('/orders/:id/assign', adminController.manualAssignOrder);
+
 // Users
 router.put('/users/:id/suspend', adminController.suspendUser);
 router.put('/users/:id/unsuspend', adminController.unsuspendUser);
 
 // Stats
 router.get('/stats', adminController.getStats);
+
+// Configs
+router.get('/config/delivery', adminController.getDeliveryConfig);
+router.put('/config/delivery', adminController.updateDeliveryConfig);
+
+router.get('/config/incentive', adminController.getIncentiveConfig);
+router.put('/config/incentive', adminController.updateIncentiveConfig);
 
 module.exports = router;

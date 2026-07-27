@@ -2,6 +2,8 @@ const User = require('../models/User');
 const Restaurant = require('../models/Restaurant');
 const Category = require('../models/Category');
 const Order = require('../models/Order'); // Will be added in Step 8, but we can import/mock
+const AdminDeliveryConfig = require('../models/AdminDeliveryConfig');
+const DriverIncentiveConfig = require('../models/DriverIncentiveConfig');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 
 exports.getPendingRestaurantOwners = async (req, res) => {
@@ -188,6 +190,131 @@ exports.getStats = async (req, res) => {
       activePartners,
       pendingApprovalsCount: pendingOwners + pendingPartners + pendingRestaurants
     });
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getDeliveryConfig = async (req, res) => {
+  try {
+    let config = await AdminDeliveryConfig.findOne();
+    if (!config) config = await AdminDeliveryConfig.create({});
+    return successResponse(res, 'Delivery config fetched', config);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.updateDeliveryConfig = async (req, res) => {
+  try {
+    let config = await AdminDeliveryConfig.findOne();
+    if (!config) {
+      config = new AdminDeliveryConfig();
+    }
+    Object.assign(config, req.body);
+    await config.save();
+    return successResponse(res, 'Delivery config updated', config);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getIncentiveConfig = async (req, res) => {
+  try {
+    let config = await DriverIncentiveConfig.findOne();
+    if (!config) config = await DriverIncentiveConfig.create({});
+    return successResponse(res, 'Incentive config fetched', config);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.updateIncentiveConfig = async (req, res) => {
+  try {
+    let config = await DriverIncentiveConfig.findOne();
+    if (!config) {
+      config = new DriverIncentiveConfig();
+    }
+    Object.assign(config, req.body);
+    await config.save();
+    return successResponse(res, 'Incentive config updated', config);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.manualAssignOrder = async (req, res) => {
+  try {
+    const { driverId } = req.body;
+    const { id: orderId } = req.params;
+
+    const driver = await User.findOne({ _id: driverId, role: 'delivery_partner', isApproved: true });
+    if (!driver) return errorResponse(res, 'Delivery partner not found or not approved', 404);
+
+    const order = await Order.findOne({ _id: orderId, status: { $in: ['placed', 'accepted', 'preparing', 'ready_for_pickup'] } }).populate('restaurant');
+    if (!order) return errorResponse(res, 'Order not found or cannot be assigned in current status', 404);
+
+    order.deliveryPartner = {
+      user: driver._id,
+      name: driver.name,
+      phone: driver.phone,
+      currentLocation: driver.currentLocation
+    };
+    order.status = 'assigned';
+    order.assignedAt = new Date();
+    
+    // Compute fee if missing
+    if (!order.deliveryFeeEarned) {
+      order.deliveryFeeEarned = order.deliveryFee || 0; 
+    }
+    await order.save();
+
+    const { getIO } = require('../utils/socket');
+    const io = getIO();
+    io.to(driver._id.toString()).emit('order_update', {
+      orderId: order._id,
+      status: order.status,
+      message: 'Admin manually assigned you a delivery!'
+    });
+
+    return successResponse(res, 'Order manually assigned to driver', order);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.exportOrdersCSV = async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .populate('user', 'name email phone')
+      .populate('restaurant', 'name')
+      .populate('deliveryPartner', 'name')
+      .sort({ createdAt: -1 });
+
+    if (!orders || orders.length === 0) {
+      return errorResponse(res, 'No orders found to export', 404);
+    }
+
+    // Manual CSV construction
+    let csvData = 'Order ID,Customer Name,Customer Phone,Restaurant Name,Driver Name,Status,Total Amount,Payment Method,Created At\n';
+
+    orders.forEach(order => {
+      const customerName = order.user ? `"${order.user.name}"` : 'N/A';
+      const customerPhone = order.user ? `"${order.user.phone}"` : 'N/A';
+      const restaurantName = order.restaurant ? `"${order.restaurant.name}"` : 'N/A';
+      const driverName = order.deliveryPartner ? `"${order.deliveryPartner.name}"` : 'N/A';
+      const status = `"${order.status}"`;
+      const amount = order.totalAmount;
+      const paymentMethod = `"${order.paymentMethod}"`;
+      const createdAt = `"${order.createdAt.toISOString()}"`;
+
+      csvData += `${order._id},${customerName},${customerPhone},${restaurantName},${driverName},${status},${amount},${paymentMethod},${createdAt}\n`;
+    });
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=orders_export.csv');
+    return res.status(200).send(csvData);
+
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }

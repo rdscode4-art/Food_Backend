@@ -22,6 +22,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    zone: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Zone',
+    },
+    adminRole: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Role',
+    },
     avatar: {
       type: String,
     },
@@ -77,12 +85,27 @@ const userSchema = new mongoose.Schema(
       type: [String], // Array of refresh tokens or device IDs to track logins
       default: [],
     },
+    // Shared business/KYC fields
+    panNumber: {
+      type: String,
+    },
+    bankDetails: {
+      accountNumber: String,
+      ifsc: String,
+      bankName: String,
+    },
     // restaurant_owner-only
     businessName: {
       type: String,
     },
     businessDocuments: {
       type: [String],
+    },
+    fssai: {
+      type: String,
+    },
+    gst: {
+      type: String,
     },
     // delivery_partner-only
     vehicleType: {
@@ -97,6 +120,13 @@ const userSchema = new mongoose.Schema(
     },
     partnerDocuments: {
       type: [String],
+    },
+    aadhaarNumber: {
+      type: String,
+    },
+    driverRating: {
+      type: Number,
+      default: 5.0,
     },
     isOnline: {
       type: Boolean,

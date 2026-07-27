@@ -59,6 +59,24 @@ exports.checkout = async (req, res) => {
     }
 
     const deliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    const qrCodeString = `rideal-delivery-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    
+    // Determine vehicle type based on item count
+    const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+    const requiredVehicleType = totalItems > 10 ? 'car' : 'bike';
+
+    // Calculate Vendor Commission
+    const AdminCommission = require('../models/AdminCommission');
+    let vendorCommissionAmount = 0;
+    const commissionConfig = await AdminCommission.findOne({ isActive: true });
+    if (commissionConfig) {
+      let itemTotal = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      if (commissionConfig.commissionType === 'percentage') {
+        vendorCommissionAmount = (itemTotal * commissionConfig.commissionValue) / 100;
+      } else {
+        vendorCommissionAmount = commissionConfig.commissionValue;
+      }
+    }
 
     // Map cart items back to format expected by Order (saving refs)
     const orderItems = cart.items.map(item => ({
@@ -82,22 +100,27 @@ exports.checkout = async (req, res) => {
       platformFee: cart.platformFee || 0,
       smallOrderFee: cart.smallOrderFee || 0,
       surgeFee: cart.surgeFee || 0,
+      vendorCommission: vendorCommissionAmount,
       deliveryInstructions,
       isScheduled: isScheduled || false,
       scheduleTime: isScheduled ? new Date(scheduleTime) : null,
       paymentStatus: paymentMethod === 'cod' ? 'pending' : (walletDeducted >= cart.totalAmount ? 'success' : 'pending'),
       deliveryOtp,
+      qrCodeString,
+      requiredVehicleType,
       status: 'placed',
       placedAt: new Date(),
     });
 
-    // Let's quickly calculate distance-based delivery fee
+    // Calculate distance-based dynamic delivery fee
     const Restaurant = require('../models/Restaurant');
+    const AdminDeliveryConfig = require('../models/AdminDeliveryConfig');
+    
     const restaurantObj = await Restaurant.findById(cart.restaurant);
-    if (restaurantObj && restaurantObj.location) {
-      // rough distance calculation using haversine or just a flat rate for now
-      // 10rs per km
-      const [lon1, lat1] = address.location.coordinates;
+    const config = await AdminDeliveryConfig.findOne() || new AdminDeliveryConfig();
+
+    if (restaurantObj && restaurantObj.location && deliveryAddress && deliveryAddress.location) {
+      const [lon1, lat1] = deliveryAddress.location.coordinates;
       const [lon2, lat2] = restaurantObj.location.coordinates;
       
       const R = 6371e3; // metres
@@ -108,20 +131,47 @@ exports.checkout = async (req, res) => {
       
       const a = Math.sin(dp/2) * Math.sin(dp/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      const d = R * c; // in metres
+      const distanceMetres = R * c; 
+      const distanceKm = distanceMetres / 1000;
       
-      let calculatedFee = Math.round((d / 1000) * 10); // 10 currency units per km
-      if (calculatedFee < 20) calculatedFee = 20; // base fee 20
+      let calculatedFee = config.baseFee + (distanceKm * config.perKmCharge);
       
-      // Check Membership for Free Delivery
-      if (user.currentMembership && user.membershipExpiry && user.membershipExpiry > new Date()) {
-        if (user.currentMembership.freeDelivery) {
-          calculatedFee = 0; // Free delivery perk applied!
-        }
+      if (calculatedFee < config.minDeliveryFee) {
+        calculatedFee = config.minDeliveryFee;
       }
       
+      if (config.isPeakHour) calculatedFee += config.peakHourFee;
+      if (config.isRaining) calculatedFee += config.rainFee;
+      if (config.isNightTime) calculatedFee += config.nightFee;
+      
+      if (distanceKm > config.longDistanceThreshold) {
+        calculatedFee += config.longDistanceFee;
+      }
+      
+      calculatedFee = calculatedFee * config.surgeMultiplier;
+      
+      let smallOrderFee = 0;
+      if (cart.totalAmount < config.smallOrderThreshold) {
+        smallOrderFee = config.smallOrderFee;
+      }
+
+      // Check Membership for Free Delivery
+      let isFreeDelivery = false;
+      if (user.currentMembership && user.membershipExpiry && user.membershipExpiry > new Date()) {
+        if (user.currentMembership.freeDelivery) {
+          isFreeDelivery = true;
+        }
+      }
+      if (cart.totalAmount >= config.freeDeliveryThreshold) {
+        isFreeDelivery = true;
+      }
+      
+      if (isFreeDelivery) calculatedFee = 0;
+      else calculatedFee = Math.round(calculatedFee);
+
       order.deliveryFee = calculatedFee;
-      order.totalAmount = cart.totalAmount + calculatedFee - (cart.discountAmount || 0);
+      order.smallOrderFee = smallOrderFee;
+      order.totalAmount = cart.totalAmount + calculatedFee + smallOrderFee - (cart.discountAmount || 0);
       await order.save();
 
       if (paymentMethod === 'wallet') {

@@ -39,6 +39,18 @@ const couponSchema = new mongoose.Schema(
         ref: 'Restaurant',
       },
     ], // if empty, applies to all restaurants
+    isFirstOrderOnly: {
+      type: Boolean,
+      default: false,
+    },
+    isFreeDelivery: {
+      type: Boolean,
+      default: false,
+    },
+    applicableZone: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Zone',
+    },
   },
   { timestamps: true }
 );

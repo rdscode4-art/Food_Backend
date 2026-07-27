@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 
 const ticketSchema = new mongoose.Schema(
   {
+    ticketNumber: {
+      type: String,
+      unique: true,
+      required: true,
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -28,6 +33,16 @@ const ticketSchema = new mongoose.Schema(
       type: String,
       enum: ['open', 'in_progress', 'resolved', 'closed'],
       default: 'open',
+    },
+    assignedStaff: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    resolution: {
+      type: String,
+    },
+    internalNotes: {
+      type: String,
     },
     messages: [
       {

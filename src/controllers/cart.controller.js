@@ -66,6 +66,32 @@ exports.addToCart = async (req, res) => {
 
     let cart = await Cart.findOne({ user: req.user._id });
 
+    let totalQuantity = quantity;
+    let existingItemIndex = -1;
+    let addonsString = JSON.stringify(selectedAddons);
+    let variantString = JSON.stringify(selectedVariant);
+
+    if (cart) {
+      // Cart exists, check restaurant consistency
+      if (cart.restaurant.toString() !== menuItem.restaurant._id.toString()) {
+        return errorResponse(res, 'Cart contains items from another restaurant. Please clear your cart first.', 409);
+      }
+      
+      existingItemIndex = cart.items.findIndex(
+        (item) => item.menuItem.toString() === menuItemId && 
+                  JSON.stringify(item.selectedAddons) === addonsString &&
+                  JSON.stringify(item.selectedVariant) === variantString
+      );
+
+      if (existingItemIndex > -1) {
+        totalQuantity += cart.items[existingItemIndex].quantity;
+      }
+    }
+
+    if (menuItem.stockCount !== null && totalQuantity > menuItem.stockCount) {
+      return errorResponse(res, `Only ${menuItem.stockCount} items left in stock`, 400);
+    }
+
     if (!cart) {
       // Create new cart
       cart = new Cart({
@@ -74,32 +100,14 @@ exports.addToCart = async (req, res) => {
         items: [{ menuItem: menuItemId, quantity, selectedAddons, selectedVariant, totalItemPrice }],
         deliveryFee: menuItem.restaurant.deliveryFee || 30, // Get delivery fee from restaurant
       });
-      applyFees(cart);
-      await cart.save();
-      return successResponse(res, 'Item added to cart', cart, 201);
-    }
-
-    // Cart exists, check restaurant consistency
-    if (cart.restaurant.toString() !== menuItem.restaurant._id.toString()) {
-      return errorResponse(res, 'Cart contains items from another restaurant. Please clear your cart first.', 409);
-    }
-
-    const addonsString = JSON.stringify(selectedAddons);
-    const variantString = JSON.stringify(selectedVariant);
-    
-    const existingItemIndex = cart.items.findIndex(
-      (item) => item.menuItem.toString() === menuItemId && 
-                JSON.stringify(item.selectedAddons) === addonsString &&
-                JSON.stringify(item.selectedVariant) === variantString
-    );
-
-    if (existingItemIndex > -1) {
-      cart.items[existingItemIndex].quantity += quantity;
-      cart.items[existingItemIndex].totalItemPrice += totalItemPrice;
     } else {
-      cart.items.push({ menuItem: menuItemId, quantity, selectedAddons, selectedVariant, totalItemPrice });
+      if (existingItemIndex > -1) {
+        cart.items[existingItemIndex].quantity += quantity;
+        cart.items[existingItemIndex].totalItemPrice += totalItemPrice;
+      } else {
+        cart.items.push({ menuItem: menuItemId, quantity, selectedAddons, selectedVariant, totalItemPrice });
+      }
     }
-
     applyFees(cart);
     await cart.save();
 

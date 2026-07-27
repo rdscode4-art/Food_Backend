@@ -12,6 +12,10 @@ const restaurantSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    zone: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Zone',
+    },
     brandName: {
       type: String, // For multi-branch grouping
       trim: true,
@@ -47,6 +51,10 @@ const restaurantSchema = new mongoose.Schema(
       type: Number, // in minutes (e.g., 30)
       default: 30,
     },
+    preparationTime: {
+      type: Number, // in minutes (e.g., 15)
+      default: 15,
+    },
     deliveryFee: {
       type: Number, // in ₹
       default: 0,
@@ -54,6 +62,10 @@ const restaurantSchema = new mongoose.Schema(
     minOrder: {
       type: Number, // in ₹
       default: 0,
+    },
+    deliveryRadius: {
+      type: Number, // in km
+      default: 5,
     },
     address: {
       type: String,

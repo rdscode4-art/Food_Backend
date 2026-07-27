@@ -24,6 +24,13 @@ const membershipPlanSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    birthdayOffers: {
+      type: Boolean,
+      default: false,
+    },
+    vipCustomerBenefits: {
+      type: String,
+    },
     description: {
       type: String,
     },

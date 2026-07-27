@@ -131,12 +131,43 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    rainFee: {
+      type: Number,
+      default: 0,
+    },
+    nightFee: {
+      type: Number,
+      default: 0,
+    },
     discountAmount: {
       type: Number,
       default: 0,
     },
+    vendorCommission: {
+      type: Number,
+      default: 0,
+    },
+    settlementId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'VendorSettlement',
+      default: null,
+    },
     deliveryOtp: {
       type: String,
+    },
+    qrCodeString: {
+      type: String, // String encoded in the QR code for driver to scan
+    },
+    digitalSignature: {
+      type: String, // URL to the digital confirmation signature image
+    },
+    requiredVehicleType: {
+      type: String,
+      enum: ['bike', 'scooter', 'car', 'van'],
+      default: 'bike',
+    },
+    preparationTime: {
+      type: Number, // in minutes
     },
     deliveryFeeEarned: Number,
     estimatedDeliveryTime: Date,

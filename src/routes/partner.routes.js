@@ -22,6 +22,7 @@ router.put(
 
 router.get('/orders/available', partnerController.getAvailableOrders);
 router.put('/orders/:id/accept', partnerController.acceptOrder);
+router.put('/orders/:id/reject', partnerController.rejectOrder);
 router.put('/orders/:id/picked-up', partnerController.pickedUpOrder);
 router.put('/orders/:id/out-for-delivery', partnerController.outForDeliveryOrder);
 router.put('/orders/:id/deliver', partnerController.deliverOrder);
@@ -29,5 +30,8 @@ router.put('/orders/:id/deliver', partnerController.deliverOrder);
 // Payouts
 router.get('/payouts/summary', partnerController.getPayoutSummary);
 router.get('/payouts/history', partnerController.getPayoutHistory);
+
+// Withdrawals
+router.post('/withdraw', partnerController.withdrawWallet);
 
 module.exports = router;

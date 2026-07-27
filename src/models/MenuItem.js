@@ -49,6 +49,10 @@ const menuItemSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isCombo: {
+      type: Boolean,
+      default: false,
+    },
     variants: [
       {
         name: String, // e.g., 'Small', 'Medium', 'Large'
@@ -63,7 +67,15 @@ const menuItemSchema = new mongoose.Schema(
     ],
     stockCount: {
       type: Number,
-      default: null, // null means infinite stock
+      default: 0,
+    },
+    lowStockAlert: {
+      type: Boolean,
+      default: false,
+    },
+    lowStockThreshold: {
+      type: Number,
+      default: 5,
     },
     autoDisableOnEmpty: {
       type: Boolean,

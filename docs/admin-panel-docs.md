@@ -29,7 +29,7 @@ This document outlines all the APIs and frontend implementation notes required t
 
 **Admin Login**
 ```bash
-curl -X POST http://localhost:6030/api/auth/login \
+curl -X POST http://localhost:5000/api/auth/login \
 -H "Content-Type: application/json" \
 -d '{"email":"admin@fastfood.com","password":"password123"}'
 ```
@@ -38,47 +38,47 @@ curl -X POST http://localhost:6030/api/auth/login \
 
 **Get Pending Restaurant Owners**
 ```bash
-curl -X GET http://localhost:6030/api/admin/restaurant-owners/pending \
+curl -X GET http://localhost:5000/api/admin/restaurant-owners/pending \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Approve or Reject Restaurant Owner**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/restaurant-owners/<userId>/approve \
+curl -X PUT http://localhost:5000/api/admin/restaurant-owners/<userId>/approve \
 -H "Authorization: Bearer <TOKEN>"
 
-curl -X PUT http://localhost:6030/api/admin/restaurant-owners/<userId>/reject \
+curl -X PUT http://localhost:5000/api/admin/restaurant-owners/<userId>/reject \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Get Pending Delivery Partners**
 ```bash
-curl -X GET http://localhost:6030/api/admin/delivery-partners/pending \
+curl -X GET http://localhost:5000/api/admin/delivery-partners/pending \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Approve or Reject Delivery Partner**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/delivery-partners/<userId>/approve \
+curl -X PUT http://localhost:5000/api/admin/delivery-partners/<userId>/approve \
 -H "Authorization: Bearer <TOKEN>"
 
-curl -X PUT http://localhost:6030/api/admin/delivery-partners/<userId>/reject \
+curl -X PUT http://localhost:5000/api/admin/delivery-partners/<userId>/reject \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Get Pending Restaurant Profiles**
 ```bash
-curl -X GET http://localhost:6030/api/admin/restaurants/pending \
+curl -X GET http://localhost:5000/api/admin/restaurants/pending \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Approve or Reject Restaurant Profile**
 *(Note: Approving a restaurant automatically bumps the `restaurantCount` on its associated Category)*
 ```bash
-curl -X PUT http://localhost:6030/api/admin/restaurants/<restaurantId>/approve \
+curl -X PUT http://localhost:5000/api/admin/restaurants/<restaurantId>/approve \
 -H "Authorization: Bearer <TOKEN>"
 
-curl -X PUT http://localhost:6030/api/admin/restaurants/<restaurantId>/reject \
+curl -X PUT http://localhost:5000/api/admin/restaurants/<restaurantId>/reject \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -86,13 +86,13 @@ curl -X PUT http://localhost:6030/api/admin/restaurants/<restaurantId>/reject \
 
 **Suspend User Account (Bans login)**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/users/<userId>/suspend \
+curl -X PUT http://localhost:5000/api/admin/users/<userId>/suspend \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Unsuspend User Account**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/users/<userId>/unsuspend \
+curl -X PUT http://localhost:5000/api/admin/users/<userId>/unsuspend \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -100,6 +100,30 @@ curl -X PUT http://localhost:6030/api/admin/users/<userId>/unsuspend \
 
 **Get Global Platform Stats (GMV, Active Users, etc.)**
 ```bash
-curl -X GET http://localhost:6030/api/admin/stats \
+curl -X GET http://localhost:5000/api/admin/stats \
 -H "Authorization: Bearer <TOKEN>"
+```
+
+### 5. Advanced Configuration & Operations
+
+**Export Orders as CSV**
+```bash
+curl -X GET "http://localhost:5000/api/admin/orders/export?startDate=2026-01-01&endDate=2026-12-31" \
+-H "Authorization: Bearer <TOKEN>" -o orders.csv
+```
+
+**Manage Roles (RBAC)**
+```bash
+curl -X POST http://localhost:5000/api/admin/roles \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"name": "Support Manager", "permissions": ["view_orders", "manage_tickets"]}'
+```
+
+**Create Multi-City Zone**
+```bash
+curl -X POST http://localhost:5000/api/admin/zones \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"name": "Delhi NCR", "baseDeliveryFee": 40}'
 ```

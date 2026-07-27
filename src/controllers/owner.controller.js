@@ -4,6 +4,7 @@ const Order = require('../models/Order');
 const Notification = require('../models/Notification');
 const Payment = require('../models/Payment');
 const { getIO } = require('../utils/socket');
+const { autoAssignOrder } = require('../utils/autoAssign');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 
 // ========================
@@ -219,6 +220,7 @@ exports.getOrders = async (req, res) => {
 exports.acceptOrder = async (req, res) => {
   try {
     const { restaurantId, id } = req.params;
+    const { preparationTime } = req.body;
     const validRestaurantId = await verifyOwnerRestaurant(req.user._id, restaurantId);
     if (!validRestaurantId) return errorResponse(res, 'Restaurant not found', 404);
 
@@ -234,6 +236,9 @@ exports.acceptOrder = async (req, res) => {
 
     order.status = 'accepted';
     order.acceptedAt = new Date();
+    if (preparationTime) {
+      order.preparationTime = preparationTime;
+    }
     await order.save();
 
     const io = getIO();
@@ -311,7 +316,10 @@ exports.readyOrder = async (req, res) => {
     
     getIO().to(order.user.toString()).emit('order_update', { orderId: order._id, status: order.status, message: 'Your order is ready for pickup' });
 
-    return successResponse(res, 'Order marked as ready for pickup', order);
+    // Trigger auto-assignment asynchronously
+    autoAssignOrder(order._id).catch(err => console.error('[AutoAssign Error]', err));
+
+    return successResponse(res, 'Order marked as ready for pickup. Auto-assigning nearest driver...', order);
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
@@ -328,6 +336,20 @@ exports.getDashboardStats = async (req, res) => {
     const validRestaurantId = await verifyOwnerRestaurant(req.user._id, restaurantId);
     if (!validRestaurantId) return errorResponse(res, 'Restaurant not found', 404);
 
+    const restaurant = await Restaurant.findById(validRestaurantId);
+    const customerRating = restaurant ? restaurant.rating : 0;
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const todaysOrders = await Order.countDocuments({
+      restaurant: validRestaurantId,
+      createdAt: { $gte: startOfToday, $lte: endOfToday },
+      status: { $ne: 'cancelled' }
+    });
+
     const totalOrders = await Order.countDocuments({ restaurant: validRestaurantId, status: { $ne: 'cancelled' } });
     const cancelledOrders = await Order.countDocuments({ restaurant: validRestaurantId, status: 'cancelled' });
     const activeOrders = await Order.countDocuments({
@@ -337,9 +359,17 @@ exports.getDashboardStats = async (req, res) => {
 
     const revenueAggregation = await Order.aggregate([
       { $match: { restaurant: validRestaurantId, status: 'delivered' } },
-      { $group: { _id: null, totalRevenue: { $sum: '$totalAmount' } } }
+      { $group: { _id: null, totalRevenue: { $sum: '$totalAmount' }, totalCommissionDeducted: { $sum: '$vendorCommission' } } }
     ]);
     const totalRevenue = revenueAggregation.length > 0 ? revenueAggregation[0].totalRevenue : 0;
+    const totalCommissionDeducted = revenueAggregation.length > 0 ? revenueAggregation[0].totalCommissionDeducted : 0;
+
+    const VendorSettlement = require('../models/VendorSettlement');
+    const pendingSettlements = await VendorSettlement.aggregate([
+      { $match: { restaurant: validRestaurantId, status: 'pending' } },
+      { $group: { _id: null, pendingAmount: { $sum: '$netPayable' } } }
+    ]);
+    const pendingSettlementAmount = pendingSettlements.length > 0 ? pendingSettlements[0].pendingAmount : 0;
 
     const topItemsAggregation = await Order.aggregate([
       { $match: { restaurant: validRestaurantId, status: { $ne: 'cancelled' } } },
@@ -368,8 +398,12 @@ exports.getDashboardStats = async (req, res) => {
     ]);
 
     return successResponse(res, 'Dashboard stats fetched', {
+      todaysOrders,
       totalOrders,
       totalRevenue,
+      totalCommissionDeducted,
+      pendingSettlementAmount,
+      customerRating,
       activeOrders,
       cancelledOrders,
       topItems: topItemsAggregation

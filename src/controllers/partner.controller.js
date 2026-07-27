@@ -192,29 +192,113 @@ exports.outForDeliveryOrder = async (req, res) => {
 exports.deliverOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    const { deliveryOtp } = req.body;
+    const { deliveryOtp, qrCodeString, digitalSignature } = req.body;
 
-    const order = await Order.findOne({ _id: id, 'deliveryPartner.user': req.user._id });
+    const order = await Order.findOne({ _id: id, 'deliveryPartner.user': req.user._id }).populate('restaurant');
     if (!order) return errorResponse(res, 'Order not found or not assigned to you', 404);
 
     if (order.status !== 'out_for_delivery') {
       return errorResponse(res, `Cannot mark as delivered from status: ${order.status}`, 400);
     }
 
-    if (order.deliveryOtp && order.deliveryOtp !== deliveryOtp) {
-      return errorResponse(res, 'Invalid Delivery OTP', 400);
+    // Verify via OTP, QR Code, OR Digital Signature
+    let isVerified = false;
+    if (deliveryOtp && order.deliveryOtp === deliveryOtp) {
+      isVerified = true;
+    } else if (qrCodeString && order.qrCodeString === qrCodeString) {
+      isVerified = true;
+    } else if (digitalSignature && digitalSignature.length > 10) {
+      // Basic check for digital signature image URL/base64
+      order.digitalSignature = digitalSignature;
+      isVerified = true;
+    }
+
+    if (!isVerified) {
+      return errorResponse(res, 'Invalid verification (OTP, QR Code, or Digital Signature required)', 400);
     }
 
     order.status = 'delivered';
     order.deliveredAt = new Date();
     await order.save();
 
+    let finalEarned = order.deliveryFeeEarned || 0;
+
+    // --- INCENTIVE ENGINE ---
+    const DriverIncentiveConfig = require('../models/DriverIncentiveConfig');
+    const config = await DriverIncentiveConfig.findOne() || new DriverIncentiveConfig();
+
+    let bonusEarned = 0;
+    const AdminDeliveryConfig = require('../models/AdminDeliveryConfig');
+    const adminConfig = await AdminDeliveryConfig.findOne() || {};
+
+    if (adminConfig.isPeakHour) bonusEarned += config.peakHourBonus;
+    if (adminConfig.isRaining) bonusEarned += config.rainBonus;
+    if (adminConfig.isFestival) bonusEarned += config.festivalBonus;
+
+    // Check Daily Target
+    const startOfDay = new Date();
+    startOfDay.setHours(0,0,0,0);
+    const todayDeliveries = await Order.countDocuments({
+      'deliveryPartner.user': req.user._id,
+      status: 'delivered',
+      deliveredAt: { $gte: startOfDay }
+    });
+
+    // If this specific order hits the exact target, they get the bonus!
+    if (todayDeliveries === config.dailyTargetOrders) {
+      bonusEarned += config.dailyTargetBonus;
+    }
+    
+    // Check Weekly Target
+    const startOfWeek = new Date(startOfDay);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const weekDeliveries = await Order.countDocuments({
+      'deliveryPartner.user': req.user._id,
+      status: 'delivered',
+      deliveredAt: { $gte: startOfWeek }
+    });
+    
+    if (weekDeliveries === config.weeklyTargetOrders) {
+      bonusEarned += config.weeklyTargetBonus;
+    }
+
+    const userObj = await User.findById(req.user._id);
+
+    // Flat Order Incentive
+    bonusEarned += config.orderIncentive || 0;
+
+    // Distance Incentive (Calculate distance between restaurant and customer)
+    if (order.restaurant && order.restaurant.location && order.deliveryAddress && order.deliveryAddress.location) {
+      const [lon1, lat1] = order.deliveryAddress.location.coordinates;
+      const [lon2, lat2] = order.restaurant.location.coordinates;
+      
+      const R = 6371e3; // metres
+      const p1 = lat1 * Math.PI/180;
+      const p2 = lat2 * Math.PI/180;
+      const dp = (lat2-lat1) * Math.PI/180;
+      const dl = (lon2-lon1) * Math.PI/180;
+      
+      const a = Math.sin(dp/2) * Math.sin(dp/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distanceKm = (R * c) / 1000;
+
+      if (distanceKm > config.distanceThresholdKm) {
+        bonusEarned += config.distanceBonus;
+      }
+    }
+
+    finalEarned += bonusEarned;
+
     await Payout.create({
       deliveryPartner: req.user._id,
       order: order._id,
-      amount: order.deliveryFeeEarned || 0,
+      amount: finalEarned,
       status: 'pending'
     });
+
+    userObj.walletBalance = (userObj.walletBalance || 0) + finalEarned;
+    await userObj.save();
+    // --- END INCENTIVE ENGINE ---
 
     const io = getIO();
     io.to(order.user.toString()).emit('order_update', {
@@ -246,11 +330,26 @@ exports.getPayoutSummary = async (req, res) => {
   try {
     const payouts = await Payout.find({ deliveryPartner: req.user._id });
     const totalEarned = payouts.reduce((sum, p) => sum + p.amount, 0);
-    
+
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(startOfDay);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const dailyEarnings = payouts.filter(p => p.date >= startOfDay).reduce((sum, p) => sum + p.amount, 0);
+    const weeklyEarnings = payouts.filter(p => p.date >= startOfWeek).reduce((sum, p) => sum + p.amount, 0);
+    const monthlyEarnings = payouts.filter(p => p.date >= startOfMonth).reduce((sum, p) => sum + p.amount, 0);
+
+    const user = await User.findById(req.user._id);
+
     return successResponse(res, 'Payout summary fetched', {
       totalEarned,
+      dailyEarnings,
+      weeklyEarnings,
+      monthlyEarnings,
+      walletBalance: user.walletBalance || 0,
       orderCount: payouts.length,
-      payouts
     });
   } catch (error) {
     return errorResponse(res, error.message, 500);
@@ -264,6 +363,59 @@ exports.getPayoutHistory = async (req, res) => {
       .sort({ createdAt: -1 });
     
     return successResponse(res, 'Payout history fetched', payouts);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.rejectOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await Order.findOneAndUpdate(
+      { _id: id, 'deliveryPartner.user': req.user._id, status: 'assigned' },
+      { $unset: { deliveryPartner: 1 }, status: 'ready_for_pickup' },
+      { returnDocument: 'after' }
+    );
+
+    if (!order) {
+      return errorResponse(res, 'Order not found or you are not assigned to it', 404);
+    }
+
+    const { autoAssignOrder } = require('../utils/autoAssign');
+    autoAssignOrder(order._id, [req.user._id]).catch(err => console.error(err));
+
+    return successResponse(res, 'Order rejected successfully', null);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.withdrawWallet = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || amount <= 0) return errorResponse(res, 'Invalid withdrawal amount', 400);
+
+    const user = await User.findById(req.user._id);
+    if ((user.walletBalance || 0) < amount) {
+      return errorResponse(res, 'Insufficient wallet balance', 400);
+    }
+    
+    if (!user.bankDetails || !user.bankDetails.accountNumber) {
+      return errorResponse(res, 'Bank details not set in your profile', 400);
+    }
+
+    user.walletBalance -= amount;
+    await user.save();
+
+    const WithdrawalRequest = require('../models/WithdrawalRequest');
+    const withdrawal = await WithdrawalRequest.create({
+      driver: user._id,
+      amount,
+      bankDetails: user.bankDetails,
+      status: 'pending'
+    });
+
+    return successResponse(res, 'Withdrawal request submitted', withdrawal);
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }

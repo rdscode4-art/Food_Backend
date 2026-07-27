@@ -114,6 +114,7 @@ const seedDatabase = async () => {
         category: 'Burgers',
         addons: [{ name: 'Cheese', price: 20 }, { name: 'Bacon', price: 50 }],
         isAvailable: true,
+        isVeg: false,
       },
       {
         restaurant: restaurant1._id,
@@ -123,6 +124,7 @@ const seedDatabase = async () => {
         category: 'Sides',
         addons: [{ name: 'Peri Peri', price: 15 }],
         isAvailable: true,
+        isVeg: true,
       },
       {
         restaurant: restaurant2._id,
@@ -132,6 +134,7 @@ const seedDatabase = async () => {
         category: 'Pizzas',
         addons: [{ name: 'Extra Cheese', price: 40 }],
         isAvailable: true,
+        isVeg: true,
       },
     ]);
     console.log('Menu items created.');
