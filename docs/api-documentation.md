@@ -52,6 +52,14 @@ All protected routes require a JWT bearer token passed in the `Authorization` he
 - `PUT /users/:id/approve`: Approve vendor or driver accounts.
 - `POST /config/delivery`: Update global delivery charge engine rules.
 - `GET /orders/export`: Download order history as a CSV file.
+- `POST /roles`: Create Admin roles with RBAC permissions.
+- `POST /zones`: Manage multi-city geographical zones.
+- `POST /cms`: Manage static content pages (Privacy Policy, FAQs).
+- `POST /refund-rules`: Configure complex refund condition logic.
+- `POST /advertisements`: Manage vendor sponsored listings.
+- `POST /tables`: Manage restaurant tables for QR / Dine-in ordering.
+- `GET /activity-logs`: View device management and security audit logs.
+- `POST /notifications/templates`: Setup Push/SMS notification templates.
 
 ## Error Handling
 The API uses standard HTTP status codes:

@@ -235,3 +235,41 @@ curl -X PUT http://localhost:5000/api/owner/<restaurantId>/menu/<menuItemId> \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"lowStockAlert": true, "lowStockThreshold": 5}'
 ```
+
+### 9. Dine-In & Table Management
+
+**Get All Tables for Restaurant**
+```bash
+curl -X GET http://localhost:5000/api/owner/<restaurantId>/tables \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Create a New Table**
+```bash
+curl -X POST http://localhost:5000/api/owner/<restaurantId>/tables \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"tableNumber": "T-01", "capacity": 4}'
+```
+
+**Generate QR Code for Table Ordering**
+```bash
+curl -X GET http://localhost:5000/api/owner/<restaurantId>/tables/<tableId>/qr \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+### 10. Reviews & Ratings
+
+**Get All Customer Reviews**
+```bash
+curl -X GET http://localhost:5000/api/owner/<restaurantId>/reviews \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+### 11. Sponsored Listings & Advertisements (PRD 36)
+
+**View Active Advertisement Campaigns**
+*(Note: Ad campaigns are created by Admins, but owners can view their active budgets and statuses here)*
+```bash
+curl -X GET http://localhost:5000/api/owner/<restaurantId>/advertisements \
+-H "Authorization: Bearer <TOKEN>"
+```

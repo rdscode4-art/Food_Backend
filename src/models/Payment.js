@@ -26,8 +26,20 @@ const paymentSchema = new mongoose.Schema(
       enum: ['pending', 'success', 'failed'],
       default: 'pending',
     },
-    mockTransactionId: {
+    transactionId: {
       type: String,
+      description: 'Official transaction ID from the gateway',
+    },
+    gateway: {
+      type: String,
+      enum: ['razorpay', 'stripe', 'cashfree', 'wallet', 'cod'],
+      required: true,
+      default: 'cod',
+    },
+    refundStatus: {
+      type: String,
+      enum: ['none', 'partial', 'full', 'failed'],
+      default: 'none',
     },
   },
   { timestamps: true }

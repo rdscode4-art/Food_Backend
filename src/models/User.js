@@ -30,6 +30,13 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Role',
     },
+    loginHistory: [
+      {
+        ipAddress: String,
+        deviceMetadata: String,
+        timestamp: { type: Date, default: Date.now }
+      }
+    ],
     avatar: {
       type: String,
     },

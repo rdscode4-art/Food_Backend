@@ -89,7 +89,8 @@ curl -X PUT http://localhost:5000/api/partner/orders/<orderId>/accept \
 **Reject a Job (Triggers Auto-Reassign)**
 ```bash
 curl -X PUT http://localhost:5000/api/partner/orders/<orderId>/reject \
--H "Authorization: Bearer <TOKEN>"
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"reason": "Vehicle Breakdown"}'
 ```
 
 **Mark as Picked Up**
@@ -142,6 +143,56 @@ curl -X POST http://localhost:5000/api/partner/withdraw \
 
 ---
 
+
+### 5. Trips & Ratings
+
+**Get Completed Trip History**
+```bash
+curl -X GET http://localhost:5000/api/partner/orders/history \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Get Driver Performance (Ratings & Reviews)**
+```bash
+curl -X GET http://localhost:5000/api/partner/ratings \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+### 6. Driver Support (Complaints)
+
+**Raise a Support Ticket**
+```bash
+curl -X POST http://localhost:5000/api/tickets \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"subject": "Payment Delay", "description": "My last withdrawal is stuck.", "type": "driver"}'
+```
+
+---
+
+
+### 7. Profile & Notifications
+
+**Get Driver Profile**
+```bash
+curl -X GET http://localhost:5000/api/partner/profile \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Update Profile (Vehicle Info)**
+```bash
+curl -X PUT http://localhost:5000/api/partner/profile \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"vehicleNumber": "MH-12-PQ-9999"}'
+```
+
+**Get Notifications**
+```bash
+curl -X GET http://localhost:5000/api/notifications \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+---
+
 ## Admin Configuration APIs (For Admins Only)
 
 ### 1. Delivery Charge Config
@@ -179,12 +230,4 @@ curl -X PUT http://localhost:5000/api/admin/orders/<orderId>/assign \
 -d '{"driverId": "<DRIVER_USER_ID>"}'
 ```
 
-### 4. Driver Wallet & Withdrawal
 
-**Request Earnings Withdrawal**
-```bash
-curl -X POST http://localhost:5000/api/driver/wallet/withdraw \
--H "Authorization: Bearer <TOKEN>" \
--H "Content-Type: application/json" \
--d '{"amount": 500, "bankDetailsId": "bank_12345"}'
-```

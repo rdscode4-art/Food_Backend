@@ -104,7 +104,49 @@ curl -X GET http://localhost:5000/api/admin/stats \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
-### 5. Advanced Configuration & Operations
+### 5. Customer & Vendor Management (PRD 31-33)
+
+**View All Customers / Search**
+```bash
+curl -X GET "http://localhost:5000/api/admin/users?role=customer&search=john" \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Manage Customer Loyalty Points**
+```bash
+curl -X PUT http://localhost:5000/api/admin/users/<userId>/loyalty \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"action": "add", "points": 500}'
+```
+
+**Manage Vendor Commission Rate**
+```bash
+curl -X PUT http://localhost:5000/api/admin/restaurants/<restaurantId>/commission \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"commissionRate": 15.5}'
+```
+
+### 6. Order & Coupon Management (PRD 34-35)
+
+**Manual Order Cancellation & Refund**
+```bash
+curl -X PUT http://localhost:5000/api/admin/orders/<orderId>/cancel \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"reason": "Customer requested", "refundType": "wallet"}'
+```
+
+**Create Platform Coupon**
+```bash
+curl -X POST http://localhost:5000/api/admin/coupons \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"code": "FESTIVAL50", "discountType": "percentage", "discountValue": 50, "isFirstOrderOnly": false}'
+```
+
+### 7. Advanced Configuration & Operations
 
 **Export Orders as CSV**
 ```bash
@@ -126,4 +168,52 @@ curl -X POST http://localhost:5000/api/admin/zones \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"name": "Delhi NCR", "baseDeliveryFee": 40}'
+```
+
+### 8. Deep Cut System Config & Modules
+
+**Create CMS Page (Privacy Policy, Terms)**
+```bash
+curl -X POST http://localhost:5000/api/admin/cms \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"slug": "privacy-policy", "title": "Privacy Policy", "content": "<h1>Privacy</h1><p>Content here...</p>"}'
+```
+
+**Configure Refund Rules**
+```bash
+curl -X POST http://localhost:5000/api/admin/refund-rules \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"name": "Driver Cancellation Rule", "triggerStatus": "accepted", "initiatorRole": "delivery_partner", "refundPercentage": 100}'
+```
+
+**View Admin Activity Logs**
+```bash
+curl -X GET http://localhost:5000/api/admin/activity-logs?limit=50 \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Create Notification Template**
+```bash
+curl -X POST http://localhost:5000/api/admin/notifications/templates \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"name": "ORDER_ACCEPTED", "channel": "push", "titleTemplate": "Order {{orderId}} Accepted", "bodyTemplate": "Hi {{userName}}, your order is accepted!"}'
+```
+
+**Manage Advertisement Campaigns**
+```bash
+curl -X POST http://localhost:5000/api/admin/advertisements \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"restaurant": "<restaurantId>", "adType": "banner", "budget": 5000, "startDate": "2026-08-01", "endDate": "2026-08-15"}'
+```
+
+**Create Dine-in Table**
+```bash
+curl -X POST http://localhost:5000/api/admin/tables \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"restaurant": "<restaurantId>", "tableNumber": "T-12", "capacity": 4}'
 ```

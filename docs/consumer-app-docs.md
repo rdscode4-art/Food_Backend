@@ -283,15 +283,11 @@ curl -X POST http://localhost:5000/api/order/checkout \
   },
   "paymentMethod": "card",
   "deliveryInstructions": "Leave at the door",
-  "isScheduled": false
+  "isScheduled": false,
+  "orderType": "delivery",
+  "tableId": null,
+  "couponCode": "FESTIVAL50"
 }'
-```
-
-**Mock Payment Charge**
-```bash
-curl -X POST http://localhost:5000/api/payments/mock-charge \
--H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
--d '{"orderId":"<orderId>","method":"card","forceStatus":"success"}'
 ```
 
 **Get Order History**
@@ -359,7 +355,7 @@ curl -X GET http://localhost:5000/api/static/faq
 curl -X GET http://localhost:5000/api/static/terms
 ```
 
-### 10. Wallet (`/api/wallet`)
+### 9. Wallet (`/api/wallet`)
 
 **Get Wallet Balance**
 ```bash
@@ -382,7 +378,7 @@ curl -X POST http://localhost:5000/api/wallet/add \
 
 *(You can now pass `"paymentMethod": "wallet"` in the `/api/order/checkout` endpoint to pay using your wallet balance!)*
 
-### 11. Coupons & Offers (`/api/coupons`)
+### 10. Coupons & Offers (`/api/coupons`)
 
 **Get Available Coupons**
 ```bash
@@ -397,7 +393,7 @@ curl -X POST http://localhost:5000/api/coupons/apply \
 -d '{"code": "WELCOME50"}'
 ```
 
-### 12. Membership Plans (Loyalty) (`/api/membership`)
+### 11. Membership Plans (Loyalty) (`/api/membership`)
 
 **Get All Active Plans**
 ```bash
@@ -411,7 +407,7 @@ curl -X POST http://localhost:5000/api/membership/subscribe \
 -d '{"planId": "<planId>"}'
 ```
 
-### 13. Customer Support Tickets (`/api/tickets`)
+### 12. Customer Support Tickets (`/api/tickets`)
 
 **Create a Support Ticket**
 ```bash
@@ -433,7 +429,7 @@ curl -X POST http://localhost:5000/api/tickets/<ticketId>/reply \
 -d '{"message": "I also forgot to mention I did not receive the fries."}'
 ```
 
-### 14. Membership Plans (`/api/memberships`)
+### 13. Membership Plans (`/api/memberships`)
 
 **Get Available Memberships**
 ```bash
@@ -447,7 +443,7 @@ curl -X POST http://localhost:5000/api/memberships/purchase \
 -d '{"planId": "<planId>"}'
 ```
 
-### 15. Zones (`/api/zones`)
+### 14. Zones (`/api/zones`)
 
 **Get All Active Service Zones**
 ```bash

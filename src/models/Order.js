@@ -106,6 +106,13 @@ const orderSchema = new mongoose.Schema(
       ],
       default: 'placed',
     },
+    statusHistory: [
+      {
+        status: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now },
+        note: String
+      }
+    ],
     rejectedReason: String,
     totalAmount: {
       type: Number,
@@ -146,6 +153,17 @@ const orderSchema = new mongoose.Schema(
     vendorCommission: {
       type: Number,
       default: 0,
+    },
+
+    orderType: {
+      type: String,
+      enum: ['delivery', 'takeaway', 'dine_in'],
+      default: 'delivery',
+    },
+    table: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Table',
+      description: 'Linked table if orderType is dine_in',
     },
     settlementId: {
       type: mongoose.Schema.Types.ObjectId,
