@@ -8,6 +8,9 @@ const router = express.Router();
 // Apply auth and admin role check to all routes in this file
 router.use(authenticate, authorize('admin'));
 
+// Dashboard
+router.get('/dashboard', adminController.getDashboardStats);
+
 // Restaurant Owners
 router.get('/restaurant-owners/pending', adminController.getPendingRestaurantOwners);
 router.put('/restaurant-owners/:id/approve', adminController.approveRestaurantOwner);
@@ -40,5 +43,29 @@ router.put('/config/delivery', adminController.updateDeliveryConfig);
 
 router.get('/config/incentive', adminController.getIncentiveConfig);
 router.put('/config/incentive', adminController.updateIncentiveConfig);
+
+// Users
+router.get('/users', adminController.getUsers);
+router.put('/users/:id/loyalty', adminController.manageLoyalty);
+router.put('/restaurants/:id/commission', adminController.manageCommission);
+
+// Orders & Coupons
+router.put('/orders/:id/cancel', adminController.cancelOrder);
+router.post('/coupons', adminController.createPlatformCoupon);
+router.get('/orders/export', adminController.exportOrders);
+
+// Roles & Zones
+router.post('/roles', adminController.createRole);
+router.post('/zones', adminController.createZone);
+
+// CMS & Rules
+router.post('/cms', adminController.createCmsPage);
+router.post('/refund-rules', adminController.createRefundRule);
+router.get('/activity-logs', adminController.getActivityLogs);
+
+// Notifications & Ads
+router.post('/notifications/templates', adminController.createNotificationTemplate);
+router.post('/advertisements', adminController.createAdvertisement);
+router.post('/tables', adminController.createTable);
 
 module.exports = router;

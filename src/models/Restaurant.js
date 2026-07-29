@@ -4,7 +4,7 @@ const restaurantSchema = new mongoose.Schema(
   {
     owner: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Vendor',
       required: true,
     },
     name: {

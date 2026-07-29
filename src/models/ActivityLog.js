@@ -4,7 +4,7 @@ const activityLogSchema = new mongoose.Schema(
   {
     admin: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      refPath: 'userModel',
       required: true,
       description: 'The admin user who performed the action',
     },

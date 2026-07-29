@@ -117,8 +117,8 @@ exports.search = async (req, res) => {
     
     // Save search query to history if present
     if (q && req.user && req.user._id) {
-      const User = require('../models/User');
-      await User.findByIdAndUpdate(req.user._id, {
+      const Vendor = require('../models/Vendor');
+      await Vendor.findByIdAndUpdate(req.user._id, {
         $addToSet: { recentSearches: q }
       });
     }

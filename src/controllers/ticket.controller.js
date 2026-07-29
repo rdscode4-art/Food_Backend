@@ -5,13 +5,17 @@ exports.createTicket = async (req, res) => {
   try {
     const { subject, description, orderId, priority } = req.body;
 
+    const userModelMap = { 'customer': 'Consumer', 'restaurant_owner': 'Vendor', 'delivery_partner': 'DeliveryPartner' };
+    
     const ticket = await Ticket.create({
       user: req.user._id,
+      userModel: userModelMap[req.user.role],
+      ticketNumber: 'TKT-' + Date.now(),
       subject,
       description,
       order: orderId,
       priority: priority || 'medium',
-      messages: [{ sender: req.user._id, message: description }]
+      messages: [{ sender: req.user._id, senderModel: userModelMap[req.user.role], message: description }]
     });
 
     return successResponse(res, 'Support ticket created successfully', ticket, 201);

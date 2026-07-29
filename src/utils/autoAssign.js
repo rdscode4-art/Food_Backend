@@ -1,4 +1,4 @@
-const User = require('../models/User');
+const DeliveryPartner = require('../models/DeliveryPartner');
 const Order = require('../models/Order');
 const Notification = require('../models/Notification');
 const { getIO } = require('./socket');
@@ -25,7 +25,7 @@ const autoAssignOrder = async (orderId, excludeDriverIds = []) => {
     }
 
     // Find nearest online delivery partners
-    const nearbyDrivers = await User.find({
+    const nearbyDrivers = await DeliveryPartner.find({
       role: 'delivery_partner',
       isOnline: true,
       ...vehicleMatch,

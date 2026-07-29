@@ -10,7 +10,7 @@ const reviewSchema = new mongoose.Schema(
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Consumer',
       required: true,
     },
     restaurant: {
@@ -19,7 +19,7 @@ const reviewSchema = new mongoose.Schema(
     },
     deliveryPartner: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Consumer',
     },
     foodItem: {
       type: mongoose.Schema.Types.ObjectId,

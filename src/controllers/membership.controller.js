@@ -1,5 +1,5 @@
 const MembershipPlan = require('../models/MembershipPlan');
-const User = require('../models/User');
+const Consumer = require('../models/Consumer');
 const WalletTransaction = require('../models/WalletTransaction');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 
@@ -28,7 +28,7 @@ exports.subscribeToPlan = async (req, res) => {
     const plan = await MembershipPlan.findById(planId);
     if (!plan || !plan.isActive) return errorResponse(res, 'Invalid or inactive plan', 404);
 
-    const user = await User.findById(req.user._id);
+    const user = await Consumer.findById(req.user._id);
 
     // Check if user has enough wallet balance
     if (user.walletBalance < plan.price) {

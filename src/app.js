@@ -25,6 +25,7 @@ const partnerRoutes = require('./routes/partner.routes');
 const staticRoutes = require('./routes/static.routes');
 const vendorCouponRoutes = require('./routes/vendorCoupon.routes');
 const vendorSettlementRoutes = require('./routes/vendorSettlement.routes');
+const zoneRoutes = require('./routes/zone.routes');
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use('/api/static', staticRoutes);
 // Vendor specific advanced routes mounted on /api/owner
 app.use('/api/owner', vendorCouponRoutes);
 app.use('/api/owner', vendorSettlementRoutes);
+app.use('/api/zones', zoneRoutes);
 
 // Health check
 app.get('/', (req, res) => {

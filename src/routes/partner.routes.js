@@ -34,4 +34,12 @@ router.get('/payouts/history', partnerController.getPayoutHistory);
 // Withdrawals
 router.post('/withdraw', partnerController.withdrawWallet);
 
+// Trips & Ratings
+router.get('/orders/history', partnerController.getOrderHistory);
+router.get('/ratings', partnerController.getRatings);
+
+// Profile
+router.get('/profile', partnerController.getProfile);
+router.put('/profile', partnerController.updateProfile);
+
 module.exports = router;

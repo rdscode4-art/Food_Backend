@@ -1,54 +1,59 @@
-const { verifyAccessToken } = require('../utils/jwt');
-const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const Consumer = require('../models/Consumer');
+const Vendor = require('../models/Vendor');
+const DeliveryPartner = require('../models/DeliveryPartner');
+const Admin = require('../models/Admin');
 const { errorResponse } = require('../utils/apiResponse');
 
-exports.authenticate = async (req, res, next) => {
+const getModelByRole = (role) => {
+  if (role === 'customer') return Consumer;
+  if (role === 'restaurant_owner') return Vendor;
+  if (role === 'delivery_partner') return DeliveryPartner;
+  if (role === 'admin') return Admin;
+  return Consumer;
+};
+
+const authenticate = async (req, res, next) => {
   try {
-    let token;
-    
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return errorResponse(res, 'No token provided', 401);
     }
 
-    if (!token) {
-      return errorResponse(res, 'Not authorized, no token provided', 401);
-    }
-
-    const decoded = verifyAccessToken(token);
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    const user = await User.findById(decoded.id).populate('adminRole');
+    const Model = getModelByRole(decoded.role);
+    const user = await Model.findById(decoded.id);
+
     if (!user) {
-      return errorResponse(res, 'User not found', 404);
+      return errorResponse(res, 'User no longer exists', 401);
     }
-
     if (user.isSuspended) {
       return errorResponse(res, 'Account suspended', 403);
     }
 
     req.user = user;
+    req.user.role = decoded.role; // ensure role is on req.user
     next();
   } catch (error) {
-    return errorResponse(res, 'Not authorized, token failed or expired', 401);
+    if (error.name === 'TokenExpiredError') {
+      return errorResponse(res, 'Token expired', 401);
+    }
+    return errorResponse(res, 'Invalid token', 401);
   }
 };
 
-exports.requirePermission = (permission) => {
+const authorizeRoles = (...roles) => {
   return (req, res, next) => {
-    // Only admins have permissions
-    if (req.user.role !== 'admin') {
-      return errorResponse(res, 'Forbidden: Admin access only', 403);
+    if (!req.user || !roles.includes(req.user.role)) {
+      return errorResponse(res, 'Access denied', 403);
     }
-    // If no specific role is assigned, they might be Super Admin or legacy admin. 
-    // We can assume legacy admins have full access, or deny by default. Let's deny if no role, unless we explicitly set a superadmin flag.
-    // For simplicity, if they have an adminRole, check it.
-    if (req.user.adminRole && req.user.adminRole.permissions && req.user.adminRole.permissions.includes(permission)) {
-      return next();
-    }
-    // Superadmin bypass (if we want to allow the root admin)
-    if (req.user.email === 'admin@rideal.com' || req.user.email === 'superadmin@rideal.com') {
-      return next();
-    }
-
-    return errorResponse(res, 'Forbidden: You do not have the required permission', 403);
+    next();
   };
+};
+
+module.exports = {
+  authenticate,
+  authorizeRoles,
 };

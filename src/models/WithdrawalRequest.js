@@ -4,7 +4,7 @@ const withdrawalRequestSchema = new mongoose.Schema(
   {
     driver: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'DeliveryPartner',
       required: true,
     },
     amount: {

@@ -58,4 +58,21 @@ router.put('/restaurant/:restaurantId/orders/:id/ready', ownerController.readyOr
 // Dashboard
 router.get('/restaurant/:restaurantId/dashboard', ownerController.getDashboardStats);
 
+// Phase 3 Features
+router.get('/restaurant/:restaurantId/tables', ownerController.getTables);
+router.post('/restaurant/:restaurantId/tables', ownerController.createTable);
+router.get('/restaurant/:restaurantId/tables/:tableId/qr', ownerController.getTableQr);
+router.get('/restaurant/:restaurantId/reviews', ownerController.getReviews);
+router.get('/restaurant/:restaurantId/advertisements', ownerController.getAdvertisements);
+
+// Vendor Coupons
+router.get('/restaurant/:restaurantId/coupons', ownerController.getCoupons);
+router.post('/restaurant/:restaurantId/coupons', ownerController.createCoupon);
+router.put('/restaurant/:restaurantId/coupons/:couponId', ownerController.updateCoupon);
+router.delete('/restaurant/:restaurantId/coupons/:couponId', ownerController.deleteCoupon);
+
+// Vendor Settlements
+router.get('/restaurant/:restaurantId/settlements', ownerController.getSettlements);
+router.post('/restaurant/:restaurantId/settlements/generate', ownerController.generateSettlement);
+
 module.exports = router;

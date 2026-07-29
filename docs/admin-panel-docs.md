@@ -29,7 +29,7 @@ This document outlines all the APIs and frontend implementation notes required t
 
 **Admin Login**
 ```bash
-curl -X POST http://localhost:5000/api/auth/login \
+curl -X POST http://localhost:6030/api/auth/login \
 -H "Content-Type: application/json" \
 -d '{"email":"admin@fastfood.com","password":"password123"}'
 ```
@@ -38,47 +38,47 @@ curl -X POST http://localhost:5000/api/auth/login \
 
 **Get Pending Restaurant Owners**
 ```bash
-curl -X GET http://localhost:5000/api/admin/restaurant-owners/pending \
+curl -X GET http://localhost:6030/api/admin/restaurant-owners/pending \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Approve or Reject Restaurant Owner**
 ```bash
-curl -X PUT http://localhost:5000/api/admin/restaurant-owners/<userId>/approve \
+curl -X PUT http://localhost:6030/api/admin/restaurant-owners/<userId>/approve \
 -H "Authorization: Bearer <TOKEN>"
 
-curl -X PUT http://localhost:5000/api/admin/restaurant-owners/<userId>/reject \
+curl -X PUT http://localhost:6030/api/admin/restaurant-owners/<userId>/reject \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Get Pending Delivery Partners**
 ```bash
-curl -X GET http://localhost:5000/api/admin/delivery-partners/pending \
+curl -X GET http://localhost:6030/api/admin/delivery-partners/pending \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Approve or Reject Delivery Partner**
 ```bash
-curl -X PUT http://localhost:5000/api/admin/delivery-partners/<userId>/approve \
+curl -X PUT http://localhost:6030/api/admin/delivery-partners/<userId>/approve \
 -H "Authorization: Bearer <TOKEN>"
 
-curl -X PUT http://localhost:5000/api/admin/delivery-partners/<userId>/reject \
+curl -X PUT http://localhost:6030/api/admin/delivery-partners/<userId>/reject \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Get Pending Restaurant Profiles**
 ```bash
-curl -X GET http://localhost:5000/api/admin/restaurants/pending \
+curl -X GET http://localhost:6030/api/admin/restaurants/pending \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Approve or Reject Restaurant Profile**
 *(Note: Approving a restaurant automatically bumps the `restaurantCount` on its associated Category)*
 ```bash
-curl -X PUT http://localhost:5000/api/admin/restaurants/<restaurantId>/approve \
+curl -X PUT http://localhost:6030/api/admin/restaurants/<restaurantId>/approve \
 -H "Authorization: Bearer <TOKEN>"
 
-curl -X PUT http://localhost:5000/api/admin/restaurants/<restaurantId>/reject \
+curl -X PUT http://localhost:6030/api/admin/restaurants/<restaurantId>/reject \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -86,13 +86,13 @@ curl -X PUT http://localhost:5000/api/admin/restaurants/<restaurantId>/reject \
 
 **Suspend User Account (Bans login)**
 ```bash
-curl -X PUT http://localhost:5000/api/admin/users/<userId>/suspend \
+curl -X PUT http://localhost:6030/api/admin/users/<userId>/suspend \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Unsuspend User Account**
 ```bash
-curl -X PUT http://localhost:5000/api/admin/users/<userId>/unsuspend \
+curl -X PUT http://localhost:6030/api/admin/users/<userId>/unsuspend \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -100,7 +100,7 @@ curl -X PUT http://localhost:5000/api/admin/users/<userId>/unsuspend \
 
 **Get Global Platform Stats (GMV, Active Users, etc.)**
 ```bash
-curl -X GET http://localhost:5000/api/admin/stats \
+curl -X GET http://localhost:6030/api/admin/stats \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -108,13 +108,13 @@ curl -X GET http://localhost:5000/api/admin/stats \
 
 **View All Customers / Search**
 ```bash
-curl -X GET "http://localhost:5000/api/admin/users?role=customer&search=john" \
+curl -X GET "http://localhost:6030/api/admin/users?role=customer&search=john" \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Manage Customer Loyalty Points**
 ```bash
-curl -X PUT http://localhost:5000/api/admin/users/<userId>/loyalty \
+curl -X PUT http://localhost:6030/api/admin/users/<userId>/loyalty \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"action": "add", "points": 500}'
@@ -122,7 +122,7 @@ curl -X PUT http://localhost:5000/api/admin/users/<userId>/loyalty \
 
 **Manage Vendor Commission Rate**
 ```bash
-curl -X PUT http://localhost:5000/api/admin/restaurants/<restaurantId>/commission \
+curl -X PUT http://localhost:6030/api/admin/restaurants/<restaurantId>/commission \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"commissionRate": 15.5}'
@@ -132,7 +132,7 @@ curl -X PUT http://localhost:5000/api/admin/restaurants/<restaurantId>/commissio
 
 **Manual Order Cancellation & Refund**
 ```bash
-curl -X PUT http://localhost:5000/api/admin/orders/<orderId>/cancel \
+curl -X PUT http://localhost:6030/api/admin/orders/<orderId>/cancel \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"reason": "Customer requested", "refundType": "wallet"}'
@@ -140,7 +140,7 @@ curl -X PUT http://localhost:5000/api/admin/orders/<orderId>/cancel \
 
 **Create Platform Coupon**
 ```bash
-curl -X POST http://localhost:5000/api/admin/coupons \
+curl -X POST http://localhost:6030/api/admin/coupons \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"code": "FESTIVAL50", "discountType": "percentage", "discountValue": 50, "isFirstOrderOnly": false}'
@@ -150,13 +150,13 @@ curl -X POST http://localhost:5000/api/admin/coupons \
 
 **Export Orders as CSV**
 ```bash
-curl -X GET "http://localhost:5000/api/admin/orders/export?startDate=2026-01-01&endDate=2026-12-31" \
+curl -X GET "http://localhost:6030/api/admin/orders/export?startDate=2026-01-01&endDate=2026-12-31" \
 -H "Authorization: Bearer <TOKEN>" -o orders.csv
 ```
 
 **Manage Roles (RBAC)**
 ```bash
-curl -X POST http://localhost:5000/api/admin/roles \
+curl -X POST http://localhost:6030/api/admin/roles \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"name": "Support Manager", "permissions": ["view_orders", "manage_tickets"]}'
@@ -164,7 +164,7 @@ curl -X POST http://localhost:5000/api/admin/roles \
 
 **Create Multi-City Zone**
 ```bash
-curl -X POST http://localhost:5000/api/admin/zones \
+curl -X POST http://localhost:6030/api/admin/zones \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"name": "Delhi NCR", "baseDeliveryFee": 40}'
@@ -174,7 +174,7 @@ curl -X POST http://localhost:5000/api/admin/zones \
 
 **Create CMS Page (Privacy Policy, Terms)**
 ```bash
-curl -X POST http://localhost:5000/api/admin/cms \
+curl -X POST http://localhost:6030/api/admin/cms \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"slug": "privacy-policy", "title": "Privacy Policy", "content": "<h1>Privacy</h1><p>Content here...</p>"}'
@@ -182,7 +182,7 @@ curl -X POST http://localhost:5000/api/admin/cms \
 
 **Configure Refund Rules**
 ```bash
-curl -X POST http://localhost:5000/api/admin/refund-rules \
+curl -X POST http://localhost:6030/api/admin/refund-rules \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"name": "Driver Cancellation Rule", "triggerStatus": "accepted", "initiatorRole": "delivery_partner", "refundPercentage": 100}'
@@ -190,13 +190,13 @@ curl -X POST http://localhost:5000/api/admin/refund-rules \
 
 **View Admin Activity Logs**
 ```bash
-curl -X GET http://localhost:5000/api/admin/activity-logs?limit=50 \
+curl -X GET http://localhost:6030/api/admin/activity-logs?limit=50 \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Create Notification Template**
 ```bash
-curl -X POST http://localhost:5000/api/admin/notifications/templates \
+curl -X POST http://localhost:6030/api/admin/notifications/templates \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"name": "ORDER_ACCEPTED", "channel": "push", "titleTemplate": "Order {{orderId}} Accepted", "bodyTemplate": "Hi {{userName}}, your order is accepted!"}'
@@ -204,7 +204,7 @@ curl -X POST http://localhost:5000/api/admin/notifications/templates \
 
 **Manage Advertisement Campaigns**
 ```bash
-curl -X POST http://localhost:5000/api/admin/advertisements \
+curl -X POST http://localhost:6030/api/admin/advertisements \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"restaurant": "<restaurantId>", "adType": "banner", "budget": 5000, "startDate": "2026-08-01", "endDate": "2026-08-15"}'
@@ -212,8 +212,52 @@ curl -X POST http://localhost:5000/api/admin/advertisements \
 
 **Create Dine-in Table**
 ```bash
-curl -X POST http://localhost:5000/api/admin/tables \
+curl -X POST http://localhost:6030/api/admin/tables \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"restaurant": "<restaurantId>", "tableNumber": "T-12", "capacity": 4}'
+```
+
+### 9. New Endpoints
+
+**Get Dashboard Stats**
+```bash
+curl -X GET http://localhost:6030/api/admin/dashboard \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Get Restaurant Orders**
+```bash
+curl -X GET http://localhost:6030/api/admin/restaurants/<restaurantId>/orders \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Manual Assign Order to Delivery Partner**
+```bash
+curl -X PUT http://localhost:6030/api/admin/orders/<orderId>/assign \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"driverId": "<deliveryPartnerId>"}'
+```
+
+**Get / Update Delivery Config**
+```bash
+curl -X GET http://localhost:6030/api/admin/config/delivery \
+-H "Authorization: Bearer <TOKEN>"
+
+curl -X PUT http://localhost:6030/api/admin/config/delivery \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"baseFee": 40, "perKmFee": 10}'
+```
+
+**Get / Update Incentive Config**
+```bash
+curl -X GET http://localhost:6030/api/admin/config/incentive \
+-H "Authorization: Bearer <TOKEN>"
+
+curl -X PUT http://localhost:6030/api/admin/config/incentive \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"dailyTarget": 10, "dailyBonus": 100}'
 ```

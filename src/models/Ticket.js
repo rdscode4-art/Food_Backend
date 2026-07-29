@@ -7,9 +7,10 @@ const ticketSchema = new mongoose.Schema(
       unique: true,
       required: true,
     },
+    userModel: { type: String, required: true, enum: ['Consumer', 'Vendor', 'DeliveryPartner', 'Admin'] },
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      refPath: 'userModel',
       required: true,
     },
     order: {
@@ -36,7 +37,7 @@ const ticketSchema = new mongoose.Schema(
     },
     assignedStaff: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      refPath: 'userModel',
     },
     resolution: {
       type: String,
@@ -48,7 +49,7 @@ const ticketSchema = new mongoose.Schema(
       {
         sender: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: 'User',
+          refPath: 'userModel',
         },
         message: {
           type: String,

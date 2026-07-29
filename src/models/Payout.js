@@ -4,7 +4,7 @@ const payoutSchema = new mongoose.Schema(
   {
     deliveryPartner: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'DeliveryPartner',
       required: true,
     },
     order: {

@@ -4,7 +4,7 @@ const wishlistSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Consumer',
       required: true,
       unique: true, // One wishlist per user
     },
@@ -12,7 +12,7 @@ const wishlistSchema = new mongoose.Schema(
       {
         itemType: {
           type: String,
-          enum: ['restaurant', 'menuItem'],
+          enum: ['Restaurant', 'MenuItem'],
           required: true,
         },
         itemId: {

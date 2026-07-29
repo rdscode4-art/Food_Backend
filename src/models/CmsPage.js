@@ -30,7 +30,7 @@ const cmsPageSchema = new mongoose.Schema(
     },
     lastUpdatedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      refPath: 'userModel',
       description: 'Admin who last updated the page',
     },
   },

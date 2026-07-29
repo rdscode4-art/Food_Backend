@@ -24,3 +24,17 @@ exports.getMenuItemDetail = async (req, res) => {
     return errorResponse(res, error.message, 500);
   }
 };
+
+exports.getMenuByRestaurant = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const menuItems = await MenuItem.find({
+      restaurant: restaurantId,
+      isAvailable: true
+    }).populate('category', 'name');
+    
+    return successResponse(res, 'Menu fetched successfully', menuItems);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};

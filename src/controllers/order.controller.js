@@ -18,12 +18,12 @@ exports.checkout = async (req, res) => {
       return errorResponse(res, 'Cart is empty', 400);
     }
 
-    const User = require('../models/User');
+    const Consumer = require('../models/Consumer');
     const MenuItem = require('../models/MenuItem');
     const WalletTransaction = require('../models/WalletTransaction');
     
     // We populate currentMembership to apply free delivery
-    const user = await User.findById(req.user._id).populate('currentMembership');
+    const user = await Consumer.findById(req.user._id).populate('currentMembership');
 
     if (!['card', 'upi', 'cod', 'wallet'].includes(paymentMethod)) {
       return errorResponse(res, 'Invalid payment method', 400);
@@ -82,8 +82,9 @@ exports.checkout = async (req, res) => {
     const orderItems = cart.items.map(item => ({
       menuItem: item.menuItem._id,
       quantity: item.quantity,
-      price: item.price,
-      selectedVariants: item.selectedVariants,
+      price: item.totalItemPrice / item.quantity,
+      totalItemPrice: item.totalItemPrice,
+      selectedVariants: item.selectedVariants || item.selectedVariant,
       selectedAddons: item.selectedAddons,
     }));
 

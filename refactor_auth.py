@@ -1,4 +1,12 @@
-const Consumer = require('../models/Consumer');
+import os
+
+auth_controller_path = r"d:\Rideal\Delivery\src\controllers\auth.controller.js"
+auth_middleware_path = r"d:\Rideal\Delivery\src\middlewares\auth.middleware.js"
+
+# We will completely overwrite auth.controller.js and auth.middleware.js 
+# because the monolithic `User` logic is heavily intertwined.
+
+auth_controller_code = """const Consumer = require('../models/Consumer');
 const Vendor = require('../models/Vendor');
 const DeliveryPartner = require('../models/DeliveryPartner');
 const Admin = require('../models/Admin');
@@ -72,7 +80,7 @@ const registerUser = async (req, res, role, extraFields = {}) => {
           { upsert: true, returnDocument: 'after' }
         );
         await sendOtpEmail(email, code);
-        return successResponse(res, 'Account pending verification. A new OTP has been sent.', { email, code }, 200);
+        return successResponse(res, 'Account pending verification. A new OTP has been sent.', { email }, 200);
       }
     }
 
@@ -98,7 +106,7 @@ const registerUser = async (req, res, role, extraFields = {}) => {
     await Otp.create({ email, code, purpose: 'signup' });
     await sendOtpEmail(email, code);
 
-    return successResponse(res, 'User registered. Please check email for OTP.', { email, code }, 201);
+    return successResponse(res, 'User registered. Please check email for OTP.', { email }, 201);
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
@@ -166,8 +174,8 @@ exports.verifyOtp = async (req, res) => {
         }
       }
 
-      const accessToken = generateAccessToken(user);
-      const refreshToken = generateRefreshToken(user);
+      const accessToken = generateAccessToken(user._id, user.role);
+      const refreshToken = generateRefreshToken(user._id, user.role);
       user.activeSessions.push(refreshToken);
       await user.save();
 
@@ -197,8 +205,8 @@ exports.login = async (req, res) => {
     if (!user.isVerified) return errorResponse(res, 'Please verify your email first', 403);
     if (user.isSuspended) return errorResponse(res, 'Account is suspended', 403);
 
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
+    const accessToken = generateAccessToken(user._id, user.role);
+    const refreshToken = generateRefreshToken(user._id, user.role);
     
     user.activeSessions.push(refreshToken);
     await user.save();
@@ -247,6 +255,8 @@ exports.refreshToken = async (req, res) => {
     const decoded = verifyRefreshToken(rToken);
     if (!decoded) return errorResponse(res, 'Invalid or expired refresh token', 403);
 
+    const match = await findUserByEmail(decoded.email || ''); // Assuming we can't find by ID if we don't know the table easily, wait, decoded has id and role.
+    // Let's find by id and role
     const Model = getModelByRole(decoded.role);
     const user = await Model.findById(decoded.id);
 
@@ -254,7 +264,7 @@ exports.refreshToken = async (req, res) => {
       return errorResponse(res, 'Invalid refresh token session', 403);
     }
 
-    const accessToken = generateAccessToken(user);
+    const accessToken = generateAccessToken(user._id, user.role);
     return successResponse(res, 'Token refreshed', { accessToken });
   } catch (error) {
     return errorResponse(res, error.message, 500);
@@ -265,8 +275,8 @@ exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const match = await findUserByEmail(email);
-    if (!match) return errorResponse(res, 'User not found', 404);
-
+    if (!match) return successResponse(res, 'If your email is registered, an OTP has been sent.');
+    
     const code = generateOtp();
     await Otp.findOneAndUpdate(
       { email, purpose: 'password_reset' },
@@ -275,7 +285,7 @@ exports.forgotPassword = async (req, res) => {
     );
     await sendOtpEmail(email, code);
 
-    return successResponse(res, 'OTP sent to email for password reset', { email, code });
+    return successResponse(res, 'If your email is registered, an OTP has been sent.');
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
@@ -316,33 +326,78 @@ exports.resendOtp = async (req, res) => {
     );
     await sendOtpEmail(email, code);
 
-    return successResponse(res, 'OTP resent successfully', { code });
+    return successResponse(res, 'OTP resent successfully');
   } catch (error) {
     return errorResponse(res, error.message, 500);
+  }
+};
+"""
+
+auth_middleware_code = """const jwt = require('jsonwebtoken');
+const Consumer = require('../models/Consumer');
+const Vendor = require('../models/Vendor');
+const DeliveryPartner = require('../models/DeliveryPartner');
+const Admin = require('../models/Admin');
+const { errorResponse } = require('../utils/apiResponse');
+
+const getModelByRole = (role) => {
+  if (role === 'customer') return Consumer;
+  if (role === 'restaurant_owner') return Vendor;
+  if (role === 'delivery_partner') return DeliveryPartner;
+  if (role === 'admin') return Admin;
+  return Consumer;
+};
+
+const verifyToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return errorResponse(res, 'No token provided', 401);
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const Model = getModelByRole(decoded.role);
+    const user = await Model.findById(decoded.id);
+
+    if (!user) {
+      return errorResponse(res, 'User no longer exists', 401);
+    }
+    if (user.isSuspended) {
+      return errorResponse(res, 'Account suspended', 403);
+    }
+
+    req.user = user;
+    req.user.role = decoded.role; // ensure role is on req.user
+    next();
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return errorResponse(res, 'Token expired', 401);
+    }
+    return errorResponse(res, 'Invalid token', 401);
   }
 };
 
-exports.logout = async (req, res) => {
-  try {
-    const user = req.user;
-    const rToken = req.cookies.refreshToken;
-    user.activeSessions = user.activeSessions.filter(token => token !== rToken);
-    await user.save();
-    res.clearCookie('refreshToken');
-    return successResponse(res, 'Logged out successfully');
-  } catch (error) {
-    return errorResponse(res, error.message, 500);
-  }
+const authorizeRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return errorResponse(res, 'Access denied', 403);
+    }
+    next();
+  };
 };
 
-exports.logoutAll = async (req, res) => {
-  try {
-    const user = req.user;
-    user.activeSessions = [];
-    await user.save();
-    res.clearCookie('refreshToken');
-    return successResponse(res, 'Logged out from all devices');
-  } catch (error) {
-    return errorResponse(res, error.message, 500);
-  }
+module.exports = {
+  verifyToken,
+  authorizeRoles,
 };
+"""
+
+with open(auth_controller_path, "w", encoding="utf-8") as f:
+    f.write(auth_controller_code)
+
+with open(auth_middleware_path, "w", encoding="utf-8") as f:
+    f.write(auth_middleware_code)
+
+print("Updated Auth Controller and Middleware for separate DB models.")

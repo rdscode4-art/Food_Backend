@@ -1,15 +1,16 @@
-const User = require('../models/User');
+const DeliveryPartner = require('../models/DeliveryPartner');
 const Order = require('../models/Order');
 const Restaurant = require('../models/Restaurant');
 const Notification = require('../models/Notification');
 const Payout = require('../models/Payout');
+const Review = require('../models/Review');
 const { getIO } = require('../utils/socket');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 
 exports.toggleStatus = async (req, res) => {
   try {
     const { isOnline } = req.body;
-    const user = await User.findById(req.user._id);
+    const user = await DeliveryPartner.findById(req.user._id);
     if (!user) return errorResponse(res, 'User not found', 404);
 
     if (typeof isOnline === 'boolean') {
@@ -29,7 +30,7 @@ exports.updateLocation = async (req, res) => {
   try {
     const { coordinates } = req.body; // [longitude, latitude]
 
-    const user = await User.findByIdAndUpdate(
+    const user = await DeliveryPartner.findByIdAndUpdate(
       req.user._id,
       {
         'currentLocation.type': 'Point',
@@ -59,7 +60,7 @@ exports.updateLocation = async (req, res) => {
 
 exports.getAvailableOrders = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await DeliveryPartner.findById(req.user._id);
     if (!user.isOnline) {
       return errorResponse(res, 'You are offline', 400);
     }
@@ -96,7 +97,7 @@ exports.getAvailableOrders = async (req, res) => {
 exports.acceptOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(req.user._id);
+    const user = await DeliveryPartner.findById(req.user._id);
 
     // Verify it is ready for pickup
     const initialOrder = await Order.findOne({ _id: id, status: 'ready_for_pickup', 'deliveryPartner.user': { $exists: false } }).populate('restaurant');
@@ -262,7 +263,7 @@ exports.deliverOrder = async (req, res) => {
       bonusEarned += config.weeklyTargetBonus;
     }
 
-    const userObj = await User.findById(req.user._id);
+    const userObj = await DeliveryPartner.findById(req.user._id);
 
     // Flat Order Incentive
     bonusEarned += config.orderIncentive || 0;
@@ -341,7 +342,7 @@ exports.getPayoutSummary = async (req, res) => {
     const weeklyEarnings = payouts.filter(p => p.date >= startOfWeek).reduce((sum, p) => sum + p.amount, 0);
     const monthlyEarnings = payouts.filter(p => p.date >= startOfMonth).reduce((sum, p) => sum + p.amount, 0);
 
-    const user = await User.findById(req.user._id);
+    const user = await DeliveryPartner.findById(req.user._id);
 
     return successResponse(res, 'Payout summary fetched', {
       totalEarned,
@@ -395,7 +396,7 @@ exports.withdrawWallet = async (req, res) => {
     const { amount } = req.body;
     if (!amount || amount <= 0) return errorResponse(res, 'Invalid withdrawal amount', 400);
 
-    const user = await User.findById(req.user._id);
+    const user = await DeliveryPartner.findById(req.user._id);
     if ((user.walletBalance || 0) < amount) {
       return errorResponse(res, 'Insufficient wallet balance', 400);
     }
@@ -416,6 +417,42 @@ exports.withdrawWallet = async (req, res) => {
     });
 
     return successResponse(res, 'Withdrawal request submitted', withdrawal);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getOrderHistory = async (req, res) => {
+  try {
+    const orders = await Order.find({ deliveryPartner: req.user._id, status: 'Delivered' });
+    return successResponse(res, 'Order history retrieved', orders);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getRatings = async (req, res) => {
+  try {
+    const ratings = await require('../models/Review').find({ target: req.user._id, targetModel: 'DeliveryPartner' });
+    return successResponse(res, 'Ratings retrieved', ratings);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getProfile = async (req, res) => {
+  try {
+    const profile = await DeliveryPartner.findById(req.user._id);
+    return successResponse(res, 'Profile retrieved', profile);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const profile = await DeliveryPartner.findByIdAndUpdate(req.user._id, req.body, { new: true });
+    return successResponse(res, 'Profile updated', profile);
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }

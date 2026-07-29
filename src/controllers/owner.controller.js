@@ -3,6 +3,11 @@ const MenuItem = require('../models/MenuItem');
 const Order = require('../models/Order');
 const Notification = require('../models/Notification');
 const Payment = require('../models/Payment');
+const Table = require('../models/Table');
+const Review = require('../models/Review');
+const Advertisement = require('../models/Advertisement');
+const VendorCoupon = require('../models/VendorCoupon');
+const VendorSettlement = require('../models/VendorSettlement');
 const { getIO } = require('../utils/socket');
 const { autoAssignOrder } = require('../utils/autoAssign');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
@@ -409,6 +414,137 @@ exports.getDashboardStats = async (req, res) => {
       topItems: topItemsAggregation
     });
 
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// ========================
+// PHASE 3 FEATURES
+// ========================
+
+exports.getTables = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const tables = await Table.find({ restaurant: restaurantId });
+    return successResponse(res, 'Tables retrieved', tables);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.createTable = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const { tableNumber, capacity } = req.body;
+    const table = new Table({
+      restaurant: restaurantId,
+      tableNumber,
+      capacity,
+    });
+    await table.save();
+    return successResponse(res, 'Table created', table, 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getTableQr = async (req, res) => {
+  try {
+    const { tableId } = req.params;
+    // Mock QR return
+    return successResponse(res, 'QR Code Generated', { qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=table_${tableId}` });
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getReviews = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const reviews = await Review.find({ restaurant: restaurantId });
+    return successResponse(res, 'Reviews retrieved', reviews);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getAdvertisements = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const ads = await Advertisement.find({ restaurant: restaurantId });
+    return successResponse(res, 'Advertisements retrieved', ads);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getCoupons = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const coupons = await VendorCoupon.find({ restaurant: restaurantId });
+    return successResponse(res, 'Coupons retrieved', coupons);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.createCoupon = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const data = { ...req.body, restaurant: restaurantId };
+    const coupon = new VendorCoupon(data);
+    await coupon.save();
+    return successResponse(res, 'Coupon created', coupon, 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.updateCoupon = async (req, res) => {
+  try {
+    const { couponId } = req.params;
+    const coupon = await VendorCoupon.findByIdAndUpdate(couponId, req.body, { new: true });
+    return successResponse(res, 'Coupon updated', coupon);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.deleteCoupon = async (req, res) => {
+  try {
+    const { couponId } = req.params;
+    await VendorCoupon.findByIdAndDelete(couponId);
+    return successResponse(res, 'Coupon deleted');
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getSettlements = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const settlements = await VendorSettlement.find({ restaurant: restaurantId });
+    return successResponse(res, 'Settlements retrieved', settlements);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.generateSettlement = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    // mock generate
+    const settlement = new VendorSettlement({
+      restaurant: restaurantId,
+      amount: 1500,
+      netPayable: 1400,
+      status: 'pending',
+      periodStart: new Date(),
+      periodEnd: new Date()
+    });
+    await settlement.save();
+    return successResponse(res, 'Settlement generated', settlement, 201);
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
