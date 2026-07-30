@@ -248,7 +248,7 @@ exports.acceptOrder = async (req, res) => {
 
     const io = getIO();
     io.to(order.user.toString()).emit('order_update', { orderId: order._id, status: order.status, message: 'Your order was accepted by the restaurant' });
-    await Notification.create({ user: order.user, title: 'Order Accepted', message: 'Your order was accepted by the restaurant', type: 'order_update' });
+    await Notification.create({ userModel: 'Consumer', user: order.user, title: 'Order Accepted', message: 'Your order was accepted by the restaurant', type: 'order_update' });
 
     return successResponse(res, 'Order accepted', order);
   } catch (error) {
@@ -283,7 +283,7 @@ exports.rejectOrder = async (req, res) => {
 
     const io = getIO();
     io.to(order.user.toString()).emit('order_update', { orderId: order._id, status: order.status, message: `Your order was rejected: ${order.rejectedReason}` });
-    await Notification.create({ user: order.user, title: 'Order Rejected', message: `Your order was rejected: ${order.rejectedReason}`, type: 'order_update' });
+    await Notification.create({ userModel: 'Consumer', user: order.user, title: 'Order Rejected', message: `Your order was rejected: ${order.rejectedReason}`, type: 'order_update' });
 
     return successResponse(res, 'Order rejected', order);
   } catch (error) {

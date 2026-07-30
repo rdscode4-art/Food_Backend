@@ -33,7 +33,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors({ origin: true, credentials: true }));
+// Permissive CORS: Allows access from ANY port/domain.
+// In the future, you can replace `true` with an array of specific domains for strict security.
+app.use(cors({
+  origin: true,
+  credentials: true,
+}));
 app.use(helmet());
 app.use(morgan('dev'));
 

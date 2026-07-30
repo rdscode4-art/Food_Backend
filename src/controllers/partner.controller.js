@@ -222,15 +222,22 @@ exports.deliverOrder = async (req, res) => {
     order.deliveredAt = new Date();
     await order.save();
 
+    const AdminDeliveryConfig = require('../models/AdminDeliveryConfig');
+    const adminConfig = await AdminDeliveryConfig.findOne() || {};
+
     let finalEarned = order.deliveryFeeEarned || 0;
+
+    // Deduct admin commission from delivery fee if applicable
+    if (adminConfig.driverCommissionRate && adminConfig.driverCommissionRate > 0) {
+      const adminCommission = (finalEarned * adminConfig.driverCommissionRate) / 100;
+      finalEarned -= adminCommission;
+    }
 
     // --- INCENTIVE ENGINE ---
     const DriverIncentiveConfig = require('../models/DriverIncentiveConfig');
     const config = await DriverIncentiveConfig.findOne() || new DriverIncentiveConfig();
 
     let bonusEarned = 0;
-    const AdminDeliveryConfig = require('../models/AdminDeliveryConfig');
-    const adminConfig = await AdminDeliveryConfig.findOne() || {};
 
     if (adminConfig.isPeakHour) bonusEarned += config.peakHourBonus;
     if (adminConfig.isRaining) bonusEarned += config.rainBonus;

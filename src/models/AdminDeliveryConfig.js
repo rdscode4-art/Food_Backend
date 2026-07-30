@@ -14,6 +14,7 @@ const adminDeliveryConfigSchema = new mongoose.Schema(
     smallOrderFee: { type: Number, default: 10 },
     longDistanceThreshold: { type: Number, default: 10 }, // in km
     longDistanceFee: { type: Number, default: 20 },
+    driverCommissionRate: { type: Number, default: 0 }, // % admin takes from driver delivery fee
     // A flag to quickly enable/disable peak/rain globally
     isPeakHour: { type: Boolean, default: false },
     isRaining: { type: Boolean, default: false },

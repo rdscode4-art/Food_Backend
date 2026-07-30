@@ -248,7 +248,7 @@ curl -X GET http://localhost:6030/api/admin/config/delivery \
 curl -X PUT http://localhost:6030/api/admin/config/delivery \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
--d '{"baseFee": 40, "perKmFee": 10}'
+-d '{"baseFee": 40, "perKmFee": 10, "driverCommissionRate": 10}'
 ```
 
 **Get / Update Incentive Config**

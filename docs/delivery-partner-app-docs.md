@@ -201,11 +201,11 @@ curl -X GET http://localhost:6030/api/notifications \
 curl -X GET http://localhost:6030/api/admin/config/delivery \
 -H "Authorization: Bearer <ADMIN_TOKEN>"
 
-# Update Config (Example toggling Peak Hour and setting Rain Fee)
+# Update Config (Example toggling Peak Hour, Rain Fee, and setting Driver Commission to 10%)
 curl -X PUT http://localhost:6030/api/admin/config/delivery \
 -H "Authorization: Bearer <ADMIN_TOKEN>" \
 -H "Content-Type: application/json" \
--d '{"isPeakHour": true, "rainFee": 20}'
+-d '{"isPeakHour": true, "rainFee": 20, "driverCommissionRate": 10}'
 ```
 
 ### 2. Driver Incentive Config
