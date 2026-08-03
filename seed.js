@@ -44,7 +44,8 @@ const seedData = async () => {
   const admin = await Admin.create({
     name: 'Super Admin',
     email: 'admin@rideal.com',
-    password: passwordHash
+    password: passwordHash,
+    isVerified: true
   });
 
   const vendor = await Vendor.create({

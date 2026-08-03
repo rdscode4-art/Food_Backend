@@ -261,3 +261,121 @@ curl -X PUT http://localhost:6030/api/admin/config/incentive \
 -H "Content-Type: application/json" \
 -d '{"dailyTarget": 10, "dailyBonus": 100}'
 ```
+
+### 10. Core FoodAdmin Endpoints
+
+**Sub-Admin Management**
+```bash
+# Get all sub-admins
+curl -X GET http://localhost:6030/api/admin/admins \
+-H "Authorization: Bearer <TOKEN>"
+
+# Create sub-admin
+curl -X POST http://localhost:6030/api/admin/admins \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"name": "Support", "email": "support@ff.com", "password": "pass", "adminRole": "<roleId>"}'
+
+# Update sub-admin
+curl -X PUT http://localhost:6030/api/admin/admins/<adminId> \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"isSuspended": false, "adminRole": "<roleId>"}'
+
+# Delete sub-admin
+curl -X DELETE http://localhost:6030/api/admin/admins/<adminId> \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Roles (RBAC)**
+```bash
+# Get all roles
+curl -X GET http://localhost:6030/api/admin/roles \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Dashboard**
+```bash
+# Get revenue chart data (last 30 days)
+curl -X GET http://localhost:6030/api/admin/dashboard/revenue-chart \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Live Operations (Orders)**
+```bash
+# Get all orders globally
+curl -X GET http://localhost:6030/api/admin/orders?status=pending \
+-H "Authorization: Bearer <TOKEN>"
+
+# Force update order status
+curl -X PUT http://localhost:6030/api/admin/orders/<orderId>/status \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"status": "delivered"}'
+```
+
+**Marketing**
+```bash
+# Send broadcast campaign
+curl -X POST http://localhost:6030/api/admin/broadcasts/send \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"title": "Promo!", "message": "50% off!", "targetAudience": "customers", "channels": ["push"]}'
+```
+
+**Financials**
+```bash
+# Get all transactions
+curl -X GET http://localhost:6030/api/admin/transactions \
+-H "Authorization: Bearer <TOKEN>"
+
+# Process manual refund
+curl -X POST http://localhost:6030/api/admin/refunds/process \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"orderId": "<orderId>", "amount": 10.50, "reason": "Damaged goods"}'
+```
+
+**Configuration**
+```bash
+# Get zones
+curl -X GET http://localhost:6030/api/admin/zones \
+-H "Authorization: Bearer <TOKEN>"
+
+# Update zone
+curl -X PUT http://localhost:6030/api/admin/zones/<zoneId> \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"baseDeliveryFee": 45}'
+
+# Update global settings
+curl -X PUT http://localhost:6030/api/admin/settings \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"taxRate": 18}'
+```
+
+**Communications (Support)**
+```bash
+# Get all support tickets
+curl -X GET http://localhost:6030/api/admin/tickets \
+-H "Authorization: Bearer <TOKEN>"
+
+# Reply to ticket
+curl -X POST http://localhost:6030/api/admin/tickets/<ticketId>/reply \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"message": "We are looking into this."}'
+```
+
+**Smart Driver Tracking (Live Map)**
+```bash
+# Get details of a specific order (Populates driver's location)
+curl -X GET http://localhost:6030/api/admin/orders/<orderId> \
+-H "Authorization: Bearer <TOKEN>"
+
+# Check a specific driver's location
+curl -X GET http://localhost:6030/api/admin/delivery-partners/<driverId>/location \
+-H "Authorization: Bearer <TOKEN>"
+```
+*Note on WebSocket Tracking: To save bandwidth and avoid browser lag, the Admin Panel should NOT join a global room for all drivers. Instead, when viewing an order details page, the frontend should run `socket.emit('join', 'track_order_<orderId>')`. When tracking a specific driver, run `socket.emit('join', 'track_driver_<driverId>')`. The backend emits `driver_location_update` events to these rooms exclusively.*

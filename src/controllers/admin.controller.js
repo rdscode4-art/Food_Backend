@@ -3,10 +3,76 @@ const Vendor = require('../models/Vendor');
 const DeliveryPartner = require('../models/DeliveryPartner');
 const Restaurant = require('../models/Restaurant');
 const Category = require('../models/Category');
-const Order = require('../models/Order'); // Will be added in Step 8, but we can import/mock
+const Order = require('../models/Order');
+const Admin = require('../models/Admin');
+const Role = require('../models/Role');
+const bcrypt = require('bcrypt');
 const AdminDeliveryConfig = require('../models/AdminDeliveryConfig');
 const DriverIncentiveConfig = require('../models/DriverIncentiveConfig');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
+
+// Sub-Admin Management
+exports.getAdmins = async (req, res) => {
+  try {
+    const admins = await Admin.find({ _id: { $ne: req.user._id } }).populate('adminRole').select('-password');
+    return successResponse(res, 'Admins fetched', admins);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.createAdmin = async (req, res) => {
+  try {
+    const { name, email, password, phone, adminRole } = req.body;
+    const existing = await Admin.findOne({ email });
+    if (existing) return errorResponse(res, 'Email already in use', 400);
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newAdmin = await Admin.create({
+      name, email, password: hashedPassword, phone, adminRole, role: 'admin', isVerified: true
+    });
+    
+    return successResponse(res, 'Admin created', { _id: newAdmin._id, name, email, adminRole }, 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.updateAdmin = async (req, res) => {
+  try {
+    const { isSuspended, adminRole } = req.body;
+    const updated = await Admin.findByIdAndUpdate(
+      req.params.id, 
+      { isSuspended, adminRole },
+      { new: true }
+    ).select('-password');
+    
+    if (!updated) return errorResponse(res, 'Admin not found', 404);
+    return successResponse(res, 'Admin updated', updated);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.deleteAdmin = async (req, res) => {
+  try {
+    const deleted = await Admin.findByIdAndDelete(req.params.id);
+    if (!deleted) return errorResponse(res, 'Admin not found', 404);
+    return successResponse(res, 'Admin deleted');
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Roles Management
+exports.getRoles = async (req, res) => {
+  try {
+    const roles = await Role.find();
+    return successResponse(res, 'Roles fetched', roles);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
 
 exports.getPendingRestaurantOwners = async (req, res) => {
   try {
@@ -71,6 +137,66 @@ exports.rejectDeliveryPartner = async (req, res) => {
     const user = await DeliveryPartner.findOneAndDelete({ _id: req.params.id });
     if (!user) return errorResponse(res, 'Delivery partner not found', 404);
     return successResponse(res, 'Delivery partner rejected and removed');
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getDriverLocation = async (req, res) => {
+  try {
+    const driver = await DeliveryPartner.findById(req.params.id);
+    if (!driver) return errorResponse(res, 'Driver not found', 404);
+
+    if (!driver.isOnline) {
+      return successResponse(res, 'Driver is offline (tracking disabled)', {
+        isOnline: false,
+        driverId: driver._id,
+        name: driver.name,
+      });
+    }
+
+    return successResponse(res, 'Driver location fetched', {
+      isOnline: true,
+      driverId: driver._id,
+      name: driver.name,
+      location: driver.currentLocation,
+    });
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getRestaurants = async (req, res) => {
+  try {
+    const restaurants = await Restaurant.find().populate('owner', 'name email phone');
+    return successResponse(res, 'All restaurants fetched', restaurants);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getRestaurantOwners = async (req, res) => {
+  try {
+    const owners = await Vendor.find();
+    return successResponse(res, 'All restaurant owners fetched', owners);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getDeliveryPartners = async (req, res) => {
+  try {
+    const partners = await DeliveryPartner.find();
+    return successResponse(res, 'All delivery partners fetched', partners);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getOrders = async (req, res) => {
+  try {
+    const orders = await Order.find().populate('restaurant').populate('deliveryPartner').populate('customer');
+    return successResponse(res, 'All orders fetched', orders);
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
@@ -279,6 +405,33 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
+exports.getRevenueChart = async (req, res) => {
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const revenueData = await Order.aggregate([
+      { 
+        $match: { 
+          status: 'delivered',
+          createdAt: { $gte: thirtyDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          revenue: { $sum: "$totalAmount" }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    return successResponse(res, 'Revenue chart data fetched', revenueData);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
 // --- Missing PRD Gaps ---
 
 exports.getUsers = async (req, res) => {
@@ -296,10 +449,64 @@ exports.manageLoyalty = async (req, res) => {
     return errorResponse(res, error.message, 500);
   }
 };
-
 exports.manageCommission = async (req, res) => {
   try {
     return successResponse(res, 'Commission managed', req.body);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Orders & Coupons
+exports.getOrders = async (req, res) => {
+  try {
+    const { status, limit = 50, page = 1 } = req.query;
+    let query = {};
+    if (status) query.status = status;
+
+    const orders = await Order.find(query)
+      .populate('user', 'name phone')
+      .populate('restaurant', 'name address')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+      
+    return successResponse(res, 'Orders fetched', orders);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.getOrderDetails = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('user', 'name phone email avatar')
+      .populate('restaurant', 'name location address contact')
+      .populate('deliveryPartner.user', 'name phone avatar currentLocation isOnline vehicleNumber');
+
+    if (!order) return errorResponse(res, 'Order not found', 404);
+
+    return successResponse(res, 'Order details fetched', order);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const order = await Order.findByIdAndUpdate(
+      req.params.id, 
+      { status },
+      { new: true }
+    );
+    if (!order) return errorResponse(res, 'Order not found', 404);
+
+    const io = require('../server').getIO();
+    io.to(order.user.toString()).emit('order_update', { orderId: order._id, status, message: `Admin updated order status to ${status}` });
+    io.to('admin_room').emit('order_update', { orderId: order._id, status });
+    
+    return successResponse(res, 'Order status updated', order);
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
@@ -313,9 +520,76 @@ exports.cancelOrder = async (req, res) => {
   }
 };
 
+const BroadcastCampaign = require('../models/BroadcastCampaign');
+
+exports.sendBroadcast = async (req, res) => {
+  try {
+    const { title, message, targetAudience, channels } = req.body;
+    
+    const campaign = await BroadcastCampaign.create({
+      title,
+      message,
+      targetAudience,
+      channels,
+      status: 'sent',
+      sentAt: Date.now()
+    });
+
+    // In a real app, this would query all users based on targetAudience and send emails/push notifications via FCM/AWS SES.
+    // For now, we simulate success.
+    const io = require('../server').getIO();
+    io.emit('broadcast', { title, message, targetAudience }); // Emit to all connected sockets
+    
+    return successResponse(res, 'Broadcast sent successfully', campaign, 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
 exports.createPlatformCoupon = async (req, res) => {
   try {
     return successResponse(res, 'Platform coupon created', req.body, 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+const Payment = require('../models/Payment');
+const RefundRule = require('../models/RefundRule');
+
+exports.getTransactions = async (req, res) => {
+  try {
+    const { limit = 50, page = 1 } = req.query;
+    const transactions = await Payment.find()
+      .populate('order', 'status totalAmount')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+      
+    return successResponse(res, 'Transactions fetched', transactions);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.processRefund = async (req, res) => {
+  try {
+    const { orderId, amount, reason } = req.body;
+    const order = await Order.findById(orderId);
+    if (!order) return errorResponse(res, 'Order not found', 404);
+
+    // In a real application, you'd call Stripe/Razorpay API here to initiate refund
+    // For now, we simulate success and update DB.
+    
+    // We could create a Refund model or just store it in Payment
+    // We'll update the Payment status
+    const payment = await Payment.findOneAndUpdate(
+      { order: orderId },
+      { status: 'refunded', refundAmount: amount, refundReason: reason },
+      { new: true }
+    );
+
+    return successResponse(res, 'Refund processed successfully', { orderId, amount, reason, payment });
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }
@@ -329,9 +603,91 @@ exports.exportOrders = async (req, res) => {
   }
 };
 
+const AppConfig = require('../models/AppConfig');
+
+exports.getZones = async (req, res) => {
+  try {
+    const Zone = require('../models/Zone');
+    const zones = await Zone.find();
+    return successResponse(res, 'Zones fetched', zones);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.updateZone = async (req, res) => {
+  try {
+    const Zone = require('../models/Zone');
+    const zone = await Zone.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!zone) return errorResponse(res, 'Zone not found', 404);
+    return successResponse(res, 'Zone updated', zone);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.updateSettings = async (req, res) => {
+  try {
+    // Assuming single document for global settings
+    let settings = await AppConfig.findOne();
+    if (!settings) {
+      settings = new AppConfig(req.body);
+      await settings.save();
+    } else {
+      settings = await AppConfig.findOneAndUpdate({}, req.body, { new: true });
+    }
+    return successResponse(res, 'Settings updated', settings);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
 exports.createRole = async (req, res) => {
   try {
     return successResponse(res, 'Role created', req.body, 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+const Ticket = require('../models/Ticket');
+
+exports.getTickets = async (req, res) => {
+  try {
+    const { status, limit = 50, page = 1 } = req.query;
+    let query = {};
+    if (status) query.status = status;
+    
+    const tickets = await Ticket.find(query)
+      .populate('user', 'name email role')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+      
+    return successResponse(res, 'Tickets fetched', tickets);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.replyToTicket = async (req, res) => {
+  try {
+    const { message } = req.body;
+    const ticket = await Ticket.findById(req.params.id);
+    if (!ticket) return errorResponse(res, 'Ticket not found', 404);
+    
+    ticket.messages.push({
+      sender: req.user._id,
+      senderModel: 'Admin',
+      message
+    });
+    ticket.status = 'in_progress';
+    await ticket.save();
+
+    const io = require('../server').getIO();
+    io.to(`ticket_${ticket._id}`).emit('new_message', { ticketId: ticket._id, message: ticket.messages[ticket.messages.length - 1] });
+
+    return successResponse(res, 'Reply added', ticket);
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }

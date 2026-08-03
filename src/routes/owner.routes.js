@@ -1,14 +1,18 @@
 const express = require('express');
 const { check } = require('express-validator');
 const ownerController = require('../controllers/owner.controller');
-const { authenticate } = require('../middlewares/auth.middleware');
-const { authorize, requireApproval } = require('../middlewares/role.middleware');
+const { authenticate, authorize } = require('../middlewares/auth.middleware');
+const { requireApproval } = require('../middlewares/role.middleware');
 const { validate } = require('../middlewares/validate.middleware');
+const { upload } = require('../middlewares/upload.middleware');
 
 const router = express.Router();
 
 // Apply auth and owner role check
 router.use(authenticate, authorize('restaurant_owner'));
+
+// Get Owner Profile
+router.get('/profile', ownerController.getProfile);
 
 // Create restaurant (does not require approval)
 router.post(
@@ -54,6 +58,7 @@ router.put('/restaurant/:restaurantId/orders/:id/accept', ownerController.accept
 router.put('/restaurant/:restaurantId/orders/:id/reject', ownerController.rejectOrder);
 router.put('/restaurant/:restaurantId/orders/:id/preparing', ownerController.prepareOrder);
 router.put('/restaurant/:restaurantId/orders/:id/ready', ownerController.readyOrder);
+router.put('/restaurant/:restaurantId/orders/:id/cancel', ownerController.cancelOrder);
 
 // Dashboard
 router.get('/restaurant/:restaurantId/dashboard', ownerController.getDashboardStats);
@@ -74,5 +79,13 @@ router.delete('/restaurant/:restaurantId/coupons/:couponId', ownerController.del
 // Vendor Settlements
 router.get('/restaurant/:restaurantId/settlements', ownerController.getSettlements);
 router.post('/restaurant/:restaurantId/settlements/generate', ownerController.generateSettlement);
+
+// Inventory / Raw Materials
+router.get('/restaurant/:restaurantId/inventory', ownerController.getInventory);
+router.post('/restaurant/:restaurantId/inventory', ownerController.addInventoryItem);
+router.put('/restaurant/:restaurantId/inventory/:itemId', ownerController.updateInventoryItem);
+
+// Image Upload
+router.post('/upload-image', upload.single('file'), ownerController.uploadImage);
 
 module.exports = router;

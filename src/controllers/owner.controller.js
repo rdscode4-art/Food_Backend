@@ -8,6 +8,10 @@ const Review = require('../models/Review');
 const Advertisement = require('../models/Advertisement');
 const VendorCoupon = require('../models/VendorCoupon');
 const VendorSettlement = require('../models/VendorSettlement');
+const WalletTransaction = require('../models/WalletTransaction');
+const PlatformCoupon = require('../models/PlatformCoupon');
+const RawMaterial = require('../models/RawMaterial');
+const { generateSettlement } = require('../utils/settlement.utils');
 const { getIO } = require('../utils/socket');
 const { autoAssignOrder } = require('../utils/autoAssign');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
@@ -15,6 +19,17 @@ const { successResponse, errorResponse } = require('../utils/apiResponse');
 // ========================
 // RESTAURANT MANAGEMENT
 // ========================
+
+exports.getProfile = async (req, res) => {
+  try {
+    const owner = await RestaurantOwner.findById(req.user._id).select('-password');
+    if (!owner) return errorResponse(res, 'Profile not found', 404);
+    
+    return successResponse(res, 'Profile fetched successfully', owner);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
 
 exports.createRestaurant = async (req, res) => {
   try {
@@ -308,6 +323,39 @@ exports.prepareOrder = async (req, res) => {
   }
 };
 
+exports.cancelOrder = async (req, res) => {
+  try {
+    const { restaurantId, id } = req.params;
+    const { reason } = req.body;
+
+    const order = await Order.findOne({ _id: id, restaurant: restaurantId });
+    if (!order) return errorResponse(res, 'Order not found', 404);
+
+    if (['delivered', 'cancelled'].includes(order.status)) {
+      return errorResponse(res, `Order cannot be cancelled. Current status: ${order.status}`, 400);
+    }
+
+    order.status = 'cancelled';
+    order.cancellationReason = reason || 'Cancelled by restaurant';
+    await order.save();
+
+    // Trigger refunds if paid online
+    if (order.paymentMethod === 'online' && order.paymentStatus === 'paid') {
+      order.paymentStatus = 'refunded';
+      await order.save();
+      // Handle actual payment gateway refund logic here if integrated
+    }
+
+    const io = require('../server').getIO();
+    io.to(`restaurant_${restaurantId}`).emit('order_status_changed', { orderId: order._id, status: 'cancelled' });
+    if (order.user) io.to(order.user.toString()).emit('order_cancelled', { orderId: order._id, reason: order.cancellationReason });
+    
+    return successResponse(res, 'Order cancelled successfully', order);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
 exports.readyOrder = async (req, res) => {
   try {
     const { restaurantId, id } = req.params;
@@ -549,3 +597,73 @@ exports.generateSettlement = async (req, res) => {
     return errorResponse(res, error.message, 500);
   }
 };
+
+// ========================
+// INVENTORY MANAGEMENT
+// ========================
+
+exports.getInventory = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const inventory = await RawMaterial.find({ restaurant: restaurantId, isActive: true });
+    return successResponse(res, 'Inventory fetched successfully', inventory);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.addInventoryItem = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const { name, unit, stockCount, reorderLevel, supplier } = req.body;
+
+    const newItem = await RawMaterial.create({
+      restaurant: restaurantId,
+      name,
+      unit,
+      stockCount,
+      reorderLevel,
+      supplier
+    });
+
+    return successResponse(res, 'Inventory item added', newItem);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+exports.updateInventoryItem = async (req, res) => {
+  try {
+    const { restaurantId, itemId } = req.params;
+    const { stockCount, reorderLevel, supplier } = req.body;
+
+    const item = await RawMaterial.findOneAndUpdate(
+      { _id: itemId, restaurant: restaurantId },
+      { stockCount, reorderLevel, supplier },
+      { new: true, runValidators: true }
+    );
+
+    if (!item) return errorResponse(res, 'Item not found', 404);
+    return successResponse(res, 'Inventory item updated', item);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// ========================
+// IMAGE UPLOAD
+// ========================
+
+exports.uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return errorResponse(res, 'No file uploaded', 400);
+    }
+    // Return the public URL for the uploaded image
+    const imageUrl = `/uploads/${req.file.filename}`;
+    return successResponse(res, 'Image uploaded successfully', { imageUrl });
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+

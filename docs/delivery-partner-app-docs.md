@@ -70,7 +70,7 @@ curl -X PUT http://localhost:6030/api/partner/location \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"coordinates":[77.615,12.935]}'
 ```
-*(Note: Coordinates are strictly [longitude, latitude])*
+*(Note: Coordinates are strictly [longitude, latitude]. If the driver is online, this API also automatically emits a `driver_location_update` WebSocket event to `track_driver_<driverId>` and `track_order_<orderId>` to power live tracking on the Admin and Consumer apps.)*
 
 ### 3. Job Management & Order Flow
 

@@ -10,8 +10,8 @@ This document outlines all the APIs and frontend implementation notes required t
 
 2. **Real-time Order Alerts (Websockets):**
    - Connect to the `ws://localhost:6030` socket server.
-   - Emit a `join` event with `restaurant_<RESTAURANT_ID>` (the specific syntax can be tailored based on your socket initialization logic, currently it targets the user ID of the owner and potentially a restaurant room).
-   - When a new order is placed, an `order_update` event will be emitted. The app should ideally play an audio chime and show a prominent alert to the staff to accept or reject the order immediately.
+   - Emit a `join` event with `restaurant_<RESTAURANT_ID>` (e.g., `socket.emit('join', 'restaurant_64a1b2c3...')`).
+   - When a new order is placed, a `new_order` event will be emitted. The app should ideally play an audio chime and show a prominent alert to the staff to accept or reject the order immediately. If an order is cancelled by the customer or admin, an `order_cancelled` event is emitted.
 
 3. **Menu Management & Inventory:**
    - Menu items can be soft-deleted automatically if they exist in past orders.
@@ -75,6 +75,12 @@ curl -X POST http://localhost:6030/api/auth/logout \
 ```
 
 ### 2. Restaurant Profile Management
+
+**Get Vendor Profile**
+```bash
+curl -X GET http://localhost:6030/api/owner/profile \
+-H "Authorization: Bearer <TOKEN>"
+```
 
 **Create Restaurant Profile (Branch)**
 ```bash

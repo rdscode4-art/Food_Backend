@@ -24,7 +24,11 @@ const authenticate = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     const Model = getModelByRole(decoded.role);
-    const user = await Model.findById(decoded.id);
+    let query = Model.findById(decoded.id);
+    if (decoded.role === 'admin') {
+      query = query.populate('adminRole');
+    }
+    const user = await query;
 
     if (!user) {
       return errorResponse(res, 'User no longer exists', 401);

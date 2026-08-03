@@ -208,7 +208,13 @@ exports.checkout = async (req, res) => {
     const io = getIO();
     io.to(`restaurant_${cart.restaurant}`).emit('new_order', {
       orderId: order._id,
-      message: 'New order received!',
+      amount: order.totalAmount,
+      message: 'New order received!'
+    });
+    io.to('admin_room').emit('new_order', {
+      orderId: order._id,
+      amount: order.totalAmount,
+      message: 'New order received!'
     });
 
     // We can also create a notification in DB for the owner, but finding the owner needs a DB query on Restaurant.

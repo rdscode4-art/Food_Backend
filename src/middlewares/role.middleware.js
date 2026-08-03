@@ -25,3 +25,24 @@ exports.requireApproval = (req, res, next) => {
   
   next();
 };
+
+exports.requirePermission = (requiredPermission) => {
+  return (req, res, next) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return errorResponse(res, 'User is not an admin', 403);
+    }
+    
+    // Super admins might not need permissions checked, or maybe they do.
+    // If adminRole is not populated or doesn't have permissions, deny.
+    if (!req.user.adminRole || !req.user.adminRole.permissions) {
+      // If we want a hardcoded superadmin fallback, we can add it here.
+      return errorResponse(res, 'No role assigned or permissions found', 403);
+    }
+
+    if (!req.user.adminRole.permissions.includes(requiredPermission)) {
+      return errorResponse(res, `Missing required permission: ${requiredPermission}`, 403);
+    }
+
+    next();
+  };
+};

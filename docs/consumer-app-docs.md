@@ -14,8 +14,8 @@ This document outlines all the APIs and frontend implementation notes required t
    - On successful login, emit a `join` event with the user's `_id` so the server knows where to send direct notifications.
    - Listen for the `order_update` event to show toast notifications and automatically refetch order details/status.
 
-3. **Live Order Tracking:**
-   - For an active order, poll `GET /api/order/:id/track` every 5-10 seconds OR rely on socket events to update the delivery partner's marker on a map view.
+3. **Live Order Tracking (WebSockets):**
+   - For an active order, the app should emit `socket.emit('join', 'track_order_<orderId>')`. The backend will emit `driver_location_update` events directly to this room with the driver's live GPS coordinates.
    - Use a mapping library (e.g., Google Maps, Mapbox, Leaflet) to plot the restaurant location, the user's delivery address, and the `deliveryPartner.currentLocation.coordinates`.
 
 4. **Cart Management:**

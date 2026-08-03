@@ -42,7 +42,7 @@ exports.updateLocation = async (req, res) => {
     if (!user) return errorResponse(res, 'User not found', 404);
 
     // Sync to active order if assigned
-    await Order.findOneAndUpdate(
+    const activeOrder = await Order.findOneAndUpdate(
       { 
         'deliveryPartner.user': req.user._id, 
         status: { $in: ['assigned', 'picked_up', 'out_for_delivery'] } 
@@ -51,6 +51,23 @@ exports.updateLocation = async (req, res) => {
         'deliveryPartner.currentLocation': user.currentLocation
       }
     );
+
+    // Emit live location via WebSockets for Admin & Customer Tracking
+    if (user.isOnline) {
+      const io = require('../server').getIO();
+      const locationPayload = {
+        driverId: user._id,
+        location: user.currentLocation
+      };
+      
+      // Emit to driver-specific room
+      io.to(`track_driver_${user._id}`).emit('driver_location_update', locationPayload);
+      
+      // If there's an active order, emit to order-specific room
+      if (activeOrder) {
+        io.to(`track_order_${activeOrder._id}`).emit('driver_location_update', locationPayload);
+      }
+    }
 
     return successResponse(res, 'Location updated', { location: user.currentLocation });
   } catch (error) {
