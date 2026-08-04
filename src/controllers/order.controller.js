@@ -55,6 +55,16 @@ exports.checkout = async (req, res) => {
           item.menuItem.isAvailable = false;
         }
         await item.menuItem.save();
+        
+        // Low Stock Alert
+        if (typeof item.menuItem.lowStockThreshold === 'number' && item.menuItem.stockCount <= item.menuItem.lowStockThreshold) {
+          const io = getIO();
+          io.to(`restaurant_${cart.restaurant._id}`).emit('low_stock_alert', {
+            itemId: item.menuItem._id,
+            itemName: item.menuItem.name,
+            currentStock: item.menuItem.stockCount
+          });
+        }
       }
     }
 

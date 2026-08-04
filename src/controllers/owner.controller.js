@@ -8,10 +8,7 @@ const Review = require('../models/Review');
 const Advertisement = require('../models/Advertisement');
 const VendorCoupon = require('../models/VendorCoupon');
 const VendorSettlement = require('../models/VendorSettlement');
-const WalletTransaction = require('../models/WalletTransaction');
-const PlatformCoupon = require('../models/PlatformCoupon');
 const RawMaterial = require('../models/RawMaterial');
-const { generateSettlement } = require('../utils/settlement.utils');
 const { getIO } = require('../utils/socket');
 const { autoAssignOrder } = require('../utils/autoAssign');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
@@ -263,6 +260,7 @@ exports.acceptOrder = async (req, res) => {
 
     const io = getIO();
     io.to(order.user.toString()).emit('order_update', { orderId: order._id, status: order.status, message: 'Your order was accepted by the restaurant' });
+    io.to(`restaurant_${restaurantId}`).emit('order_status_changed', { orderId: order._id, status: order.status });
     await Notification.create({ userModel: 'Consumer', user: order.user, title: 'Order Accepted', message: 'Your order was accepted by the restaurant', type: 'order_update' });
 
     return successResponse(res, 'Order accepted', order);
@@ -298,6 +296,7 @@ exports.rejectOrder = async (req, res) => {
 
     const io = getIO();
     io.to(order.user.toString()).emit('order_update', { orderId: order._id, status: order.status, message: `Your order was rejected: ${order.rejectedReason}` });
+    io.to(`restaurant_${restaurantId}`).emit('order_status_changed', { orderId: order._id, status: order.status });
     await Notification.create({ userModel: 'Consumer', user: order.user, title: 'Order Rejected', message: `Your order was rejected: ${order.rejectedReason}`, type: 'order_update' });
 
     return successResponse(res, 'Order rejected', order);
@@ -315,7 +314,9 @@ exports.prepareOrder = async (req, res) => {
 
     order.status = 'preparing';
     await order.save();
-    getIO().to(order.user.toString()).emit('order_update', { orderId: order._id, status: order.status, message: 'Your order is being prepared' });
+    const io = getIO();
+    io.to(order.user.toString()).emit('order_update', { orderId: order._id, status: order.status, message: 'Your order is being prepared' });
+    io.to(`restaurant_${restaurantId}`).emit('order_status_changed', { orderId: order._id, status: order.status });
 
     return successResponse(res, 'Order marked as preparing', order);
   } catch (error) {
@@ -367,7 +368,9 @@ exports.readyOrder = async (req, res) => {
     order.readyAt = new Date();
     await order.save();
     
-    getIO().to(order.user.toString()).emit('order_update', { orderId: order._id, status: order.status, message: 'Your order is ready for pickup' });
+    const io = getIO();
+    io.to(order.user.toString()).emit('order_update', { orderId: order._id, status: order.status, message: 'Your order is ready for pickup' });
+    io.to(`restaurant_${restaurantId}`).emit('order_status_changed', { orderId: order._id, status: order.status });
 
     // Trigger auto-assignment asynchronously
     autoAssignOrder(order._id).catch(err => console.error('[AutoAssign Error]', err));

@@ -280,7 +280,7 @@ curl -X GET http://localhost:6030/api/owner/restaurant/<restaurantId>/advertisem
 -H "Authorization: Bearer <TOKEN>"
 ```
 
-### 8. New Missing Endpoints
+### 12. Missing Endpoints
 
 **Update / Delete Menu Item**
 ```bash
@@ -298,12 +298,13 @@ curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/menu/<item
 -H "Authorization: Bearer <TOKEN>"
 ```
 
-**Update Order Status (Accept, Reject, Preparing, Ready)**
+**Update Order Status (Accept, Reject, Preparing, Ready, Cancel)**
 ```bash
 curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/orders/<orderId>/accept -H "Authorization: Bearer <TOKEN>"
 curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/orders/<orderId>/reject -H "Authorization: Bearer <TOKEN>"
 curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/orders/<orderId>/preparing -H "Authorization: Bearer <TOKEN>"
 curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/orders/<orderId>/ready -H "Authorization: Bearer <TOKEN>"
+curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/orders/<orderId>/cancel -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d '{"reason": "Out of items"}'
 ```
 
 **Get Table QR**
@@ -320,4 +321,35 @@ curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/coupons/<c
 
 curl -X DELETE http://localhost:6030/api/owner/restaurant/<restaurantId>/coupons/<couponId> \
 -H "Authorization: Bearer <TOKEN>"
+```
+
+### 13. Inventory / Raw Materials
+
+**Get Inventory**
+```bash
+curl -X GET http://localhost:6030/api/owner/restaurant/<restaurantId>/inventory \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Add Inventory Item**
+```bash
+curl -X POST http://localhost:6030/api/owner/restaurant/<restaurantId>/inventory \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"name": "Tomato", "unit": "kg", "stockCount": 50, "reorderLevel": 10, "supplier": "Local Farm"}'
+```
+
+**Update Inventory Item**
+```bash
+curl -X PUT http://localhost:6030/api/owner/restaurant/<restaurantId>/inventory/<itemId> \
+-H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+-d '{"stockCount": 45, "supplier": "Fresh Market"}'
+```
+
+### 14. File Uploads
+
+**Upload Image**
+```bash
+curl -X POST http://localhost:6030/api/owner/upload-image \
+-H "Authorization: Bearer <TOKEN>" \
+-F "file=@/path/to/your/image.jpg"
 ```

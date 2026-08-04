@@ -102,4 +102,15 @@ router.post('/notifications/templates', adminController.createNotificationTempla
 router.post('/advertisements', adminController.createAdvertisement);
 router.post('/tables', adminController.createTable);
 
+// Cloud Kitchen / Sub-Brands
+router.get('/vendors/:id/restaurants', adminController.getVendorRestaurants);
+
+// QR Ordering (Table Management)
+router.get('/restaurants/:id/tables', adminController.getRestaurantTables);
+router.post('/restaurants/:id/tables', adminController.addRestaurantTable);
+router.put('/restaurants/:id/tables/:tableId/qr', adminController.updateTableQR);
+
+// POS & KDS Integration
+router.put('/restaurants/:id/pos', adminController.updateRestaurantPOS);
+
 module.exports = router;

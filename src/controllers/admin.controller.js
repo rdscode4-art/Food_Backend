@@ -5,6 +5,7 @@ const Restaurant = require('../models/Restaurant');
 const Category = require('../models/Category');
 const Order = require('../models/Order');
 const Admin = require('../models/Admin');
+const Table = require('../models/Table');
 const Role = require('../models/Role');
 const bcrypt = require('bcrypt');
 const AdminDeliveryConfig = require('../models/AdminDeliveryConfig');
@@ -23,13 +24,14 @@ exports.getAdmins = async (req, res) => {
 
 exports.createAdmin = async (req, res) => {
   try {
-    const { name, email, password, phone, adminRole } = req.body;
+    const { name, email, password, phone, role, adminRole } = req.body;
+    const finalRole = role || adminRole;
     const existing = await Admin.findOne({ email });
     if (existing) return errorResponse(res, 'Email already in use', 400);
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newAdmin = await Admin.create({
-      name, email, password: hashedPassword, phone, adminRole, role: 'admin', isVerified: true
+      name, email, password: hashedPassword, phone, adminRole: finalRole, role: 'admin', isVerified: true
     });
     
     return successResponse(res, 'Admin created', { _id: newAdmin._id, name, email, adminRole }, 201);
@@ -40,10 +42,17 @@ exports.createAdmin = async (req, res) => {
 
 exports.updateAdmin = async (req, res) => {
   try {
-    const { isSuspended, adminRole } = req.body;
+    const { isSuspended, isActive, adminRole, role } = req.body;
+    const finalIsSuspended = isActive !== undefined ? !isActive : isSuspended;
+    const finalRole = role || adminRole;
+    
+    const updateData = {};
+    if (finalIsSuspended !== undefined) updateData.isSuspended = finalIsSuspended;
+    if (finalRole !== undefined) updateData.adminRole = finalRole;
+
     const updated = await Admin.findByIdAndUpdate(
       req.params.id, 
-      { isSuspended, adminRole },
+      updateData,
       { new: true }
     ).select('-password');
     
@@ -744,6 +753,72 @@ exports.createAdvertisement = async (req, res) => {
 exports.createTable = async (req, res) => {
   try {
     return successResponse(res, 'Table created', req.body, 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Cloud Kitchen: Get all restaurants under a vendor
+exports.getVendorRestaurants = async (req, res) => {
+  try {
+    const restaurants = await Restaurant.find({ owner: req.params.id }).populate('zone', 'name');
+    return successResponse(res, 'Vendor restaurants fetched', restaurants);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// QR Ordering: Get tables for a restaurant
+exports.getRestaurantTables = async (req, res) => {
+  try {
+    const tables = await Table.find({ restaurant: req.params.id });
+    return successResponse(res, 'Restaurant tables fetched', tables);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// QR Ordering: Add table to a restaurant
+exports.addRestaurantTable = async (req, res) => {
+  try {
+    const { tableNumber, capacity } = req.body;
+    const table = await Table.create({
+      restaurant: req.params.id,
+      tableNumber,
+      capacity
+    });
+    return successResponse(res, 'Table added successfully', table, 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// QR Ordering: Generate/Update QR code for a table
+exports.updateTableQR = async (req, res) => {
+  try {
+    const table = await Table.findByIdAndUpdate(
+      req.params.tableId,
+      { qrCodeUrl: req.body.qrCodeUrl },
+      { new: true }
+    );
+    if (!table) return errorResponse(res, 'Table not found', 404);
+    return successResponse(res, 'QR Code updated', table);
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// POS & KDS Integration: Update POS config
+exports.updateRestaurantPOS = async (req, res) => {
+  try {
+    const { provider, apiKey, isConnected } = req.body;
+    const restaurant = await Restaurant.findByIdAndUpdate(
+      req.params.id,
+      { posConfig: { provider, apiKey, isConnected } },
+      { new: true }
+    );
+    if (!restaurant) return errorResponse(res, 'Restaurant not found', 404);
+    return successResponse(res, 'POS Configuration updated', restaurant.posConfig);
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }

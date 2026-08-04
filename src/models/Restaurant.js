@@ -136,6 +136,11 @@ const restaurantSchema = new mongoose.Schema(
     licenseImage: {
       type: String,
     },
+    posConfig: {
+      provider: { type: String, enum: ['Petpooja', 'UrbanPiper', 'Custom', null], default: null },
+      apiKey: { type: String, default: '' },
+      isConnected: { type: Boolean, default: false }
+    },
   },
   { timestamps: true }
 );

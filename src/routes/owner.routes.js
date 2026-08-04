@@ -1,8 +1,8 @@
 const express = require('express');
 const { check } = require('express-validator');
 const ownerController = require('../controllers/owner.controller');
-const { authenticate, authorize } = require('../middlewares/auth.middleware');
-const { requireApproval } = require('../middlewares/role.middleware');
+const { authenticate } = require('../middlewares/auth.middleware');
+const { authorize, requireApproval } = require('../middlewares/role.middleware');
 const { validate } = require('../middlewares/validate.middleware');
 const { upload } = require('../middlewares/upload.middleware');
 

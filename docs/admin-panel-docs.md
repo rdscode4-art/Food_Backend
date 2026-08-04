@@ -379,3 +379,116 @@ curl -X GET http://localhost:6030/api/admin/delivery-partners/<driverId>/locatio
 -H "Authorization: Bearer <TOKEN>"
 ```
 *Note on WebSocket Tracking: To save bandwidth and avoid browser lag, the Admin Panel should NOT join a global room for all drivers. Instead, when viewing an order details page, the frontend should run `socket.emit('join', 'track_order_<orderId>')`. When tracking a specific driver, run `socket.emit('join', 'track_driver_<driverId>')`. The backend emits `driver_location_update` events to these rooms exclusively.*
+
+### 10. Sub-Admin & Role Management
+
+**Get Sub-Admins**
+```bash
+curl -X GET http://localhost:6030/api/admin/admins \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Create Sub-Admin**
+```bash
+curl -X POST http://localhost:6030/api/admin/admins \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"name": "John Doe", "email": "john@fastfood.com", "password": "securepass", "role": "<roleId>"}'
+```
+
+**Update Sub-Admin**
+```bash
+curl -X PUT http://localhost:6030/api/admin/admins/<adminId> \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"isActive": false}'
+```
+
+**Delete Sub-Admin**
+```bash
+curl -X DELETE http://localhost:6030/api/admin/admins/<adminId> \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+### 11. Configuration & Marketing
+
+**Update Global Settings**
+```bash
+curl -X PUT http://localhost:6030/api/admin/settings \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"platformName": "Rideal Food", "supportEmail": "support@rideal.com"}'
+```
+
+**Send Push Broadcast**
+```bash
+curl -X POST http://localhost:6030/api/admin/broadcasts/send \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"title": "Weekend Offer", "body": "Get 50% off!", "targetAudience": "all_customers"}'
+```
+
+**Get / Update Incentive Config**
+```bash
+curl -X GET http://localhost:6030/api/admin/config/incentive \
+-H "Authorization: Bearer <TOKEN>"
+
+curl -X PUT http://localhost:6030/api/admin/config/incentive \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"baseIncentive": 20, "rainSurge": 15}'
+```
+
+### 12. Zone Management
+
+**Get All Zones**
+```bash
+curl -X GET http://localhost:6030/api/admin/zones \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Update Zone**
+```bash
+curl -X PUT http://localhost:6030/api/admin/zones/<zoneId> \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"isActive": false}'
+```
+
+### 13. Revenue & Financials
+
+**Get Revenue Chart Data**
+```bash
+curl -X GET "http://localhost:6030/api/admin/dashboard/revenue-chart?range=monthly" \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Get Transactions**
+```bash
+curl -X GET http://localhost:6030/api/admin/transactions \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Process Refund Manually**
+```bash
+curl -X POST http://localhost:6030/api/admin/refunds/process \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"orderId": "<orderId>", "amount": 100}'
+```
+
+### 14. Advanced Restaurant Management
+
+**Get All Restaurants for a Vendor (Cloud Kitchens)**
+```bash
+curl -X GET http://localhost:6030/api/admin/vendors/<vendorId>/restaurants \
+-H "Authorization: Bearer <TOKEN>"
+```
+
+**Update POS/KDS Integration**
+```bash
+curl -X PUT http://localhost:6030/api/admin/restaurants/<restaurantId>/pos \
+-H "Authorization: Bearer <TOKEN>" \
+-H "Content-Type: application/json" \
+-d '{"provider": "petpooja", "apiKey": "xyz123"}'
+```

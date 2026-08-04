@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 const { errorHandler } = require('./middlewares/error.middleware');
 
 // Routes
@@ -41,6 +42,9 @@ app.use(cors({
 }));
 app.use(helmet());
 app.use(morgan('dev'));
+
+// Serve static files from the public directory
+app.use('/public', express.static(path.join(__dirname, '..', 'public')));
 
 // API Routes
 app.use('/api/auth', authRoutes);
