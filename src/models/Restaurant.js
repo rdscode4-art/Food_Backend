@@ -51,6 +51,14 @@ const restaurantSchema = new mongoose.Schema(
       type: Number, // in minutes (e.g., 30)
       default: 30,
     },
+    commissionRate: {
+      type: Number,
+      default: 15,
+    },
+    paymentGatewayFee: {
+      type: Number,
+      default: 2,
+    },
     preparationTime: {
       type: Number, // in minutes (e.g., 15)
       default: 15,

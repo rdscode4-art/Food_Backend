@@ -1,5 +1,6 @@
 const express = require('express');
 const adminController = require('../controllers/admin.controller');
+const { upload } = require('../middlewares/upload.middleware');
 const { authenticate } = require('../middlewares/auth.middleware');
 const { authorize } = require('../middlewares/role.middleware');
 
@@ -20,6 +21,13 @@ router.get('/roles', adminController.getRoles);
 // Dashboard
 router.get('/dashboard', adminController.getDashboardStats);
 router.get('/dashboard/revenue-chart', adminController.getRevenueChart);
+router.get('/dashboard/top-zones', adminController.getTopZones);
+
+// General Platform Entities
+router.get('/reservations', adminController.getReservations);
+router.get('/reviews', adminController.getReviews);
+router.get('/notifications', adminController.getNotifications);
+router.get('/tables', adminController.getTables);
 
 // Restaurant Owners
 router.get('/restaurant-owners', adminController.getRestaurantOwners);
@@ -70,10 +78,14 @@ router.get('/orders/:id', adminController.getOrderDetails);
 router.put('/orders/:id/status', adminController.updateOrderStatus);
 router.put('/orders/:id/cancel', adminController.cancelOrder);
 router.post('/coupons', adminController.createPlatformCoupon);
+router.get('/coupons', adminController.getCoupons);
+router.put('/coupons/:id/status', adminController.updateCouponStatus);
+router.delete('/coupons/:id', adminController.deleteCoupon);
 router.get('/orders/export', adminController.exportOrders);
 
 // Marketing
 router.post('/broadcasts/send', adminController.sendBroadcast);
+router.get('/broadcasts', adminController.getBroadcasts);
 
 // Financials
 router.get('/transactions', adminController.getTransactions);
@@ -94,12 +106,31 @@ router.post('/tickets/:id/reply', adminController.replyToTicket);
 
 // CMS & Rules
 router.post('/cms', adminController.createCmsPage);
+router.get('/cms', adminController.getCmsPages);
 router.post('/refund-rules', adminController.createRefundRule);
+router.get('/refund-rules', adminController.getRefundRules);
 router.get('/activity-logs', adminController.getActivityLogs);
 
+// Homepage Builder (CMS)
+router.get('/banners', adminController.getBanners);
+router.post('/banners', adminController.createBanner);
+router.delete('/banners/:id', adminController.deleteBanner);
+
+router.get('/categories', adminController.getCategories);
+router.post('/categories', adminController.createCategory);
+router.put('/categories/:id', adminController.updateCategory);
+router.delete('/categories/:id', adminController.deleteCategory);
+
+router.get('/top-brands', adminController.getTopBrands);
+router.put('/top-brands', adminController.updateTopBrands);
+
 // Notifications & Ads
+router.post('/upload-image', upload.single('file'), adminController.uploadImage);
 router.post('/notifications/templates', adminController.createNotificationTemplate);
 router.post('/advertisements', adminController.createAdvertisement);
+router.get('/advertisements', adminController.getAdvertisements);
+router.put('/advertisements/:id/status', adminController.updateAdStatus);
+router.delete('/advertisements/:id', adminController.deleteAdvertisement);
 router.post('/tables', adminController.createTable);
 
 // Cloud Kitchen / Sub-Brands
@@ -113,4 +144,25 @@ router.put('/restaurants/:id/tables/:tableId/qr', adminController.updateTableQR)
 // POS & KDS Integration
 router.put('/restaurants/:id/pos', adminController.updateRestaurantPOS);
 
+
+// --- New detail page APIs ---
+router.get('/restaurants/:id/menu', adminController.getRestaurantMenu);
+router.post('/restaurants/:id/menu', adminController.addRestaurantMenu);
+router.put('/restaurants/:id/menu/:itemId', adminController.updateRestaurantMenu);
+
+router.post('/vendors/:id/restaurants', adminController.addVendorBrand);
+router.put('/vendors/:id', adminController.updateVendorProfile);
+
+router.get('/restaurants/:id/analytics', adminController.getVendorAnalytics);
+router.get('/drivers/:id/analytics', adminController.getDriverAnalytics);
+router.get('/users/:id/wallet', adminController.getCustomerWallet);
+
+router.get('/faqs', adminController.getFaqs);
+router.post('/faqs', adminController.createFaq);
+router.delete('/faqs/:id', adminController.deleteFaq);
+router.delete('/faq-categories/:categoryName', adminController.deleteFaqCategory);
+
 module.exports = router;
+
+
+

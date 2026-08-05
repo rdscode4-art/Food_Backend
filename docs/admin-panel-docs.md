@@ -29,7 +29,7 @@ This document outlines all the APIs and frontend implementation notes required t
 
 **Admin Login**
 ```bash
-curl -X POST http://localhost:6030/api/auth/login \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/auth/login \
 -H "Content-Type: application/json" \
 -d '{"email":"admin@fastfood.com","password":"password123"}'
 ```
@@ -38,47 +38,47 @@ curl -X POST http://localhost:6030/api/auth/login \
 
 **Get Pending Restaurant Owners**
 ```bash
-curl -X GET http://localhost:6030/api/admin/restaurant-owners/pending \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/restaurant-owners/pending \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Approve or Reject Restaurant Owner**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/restaurant-owners/<userId>/approve \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/restaurant-owners/<userId>/approve \
 -H "Authorization: Bearer <TOKEN>"
 
-curl -X PUT http://localhost:6030/api/admin/restaurant-owners/<userId>/reject \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/restaurant-owners/<userId>/reject \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Get Pending Delivery Partners**
 ```bash
-curl -X GET http://localhost:6030/api/admin/delivery-partners/pending \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/delivery-partners/pending \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Approve or Reject Delivery Partner**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/delivery-partners/<userId>/approve \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/delivery-partners/<userId>/approve \
 -H "Authorization: Bearer <TOKEN>"
 
-curl -X PUT http://localhost:6030/api/admin/delivery-partners/<userId>/reject \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/delivery-partners/<userId>/reject \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Get Pending Restaurant Profiles**
 ```bash
-curl -X GET http://localhost:6030/api/admin/restaurants/pending \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/restaurants/pending \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Approve or Reject Restaurant Profile**
 *(Note: Approving a restaurant automatically bumps the `restaurantCount` on its associated Category)*
 ```bash
-curl -X PUT http://localhost:6030/api/admin/restaurants/<restaurantId>/approve \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/restaurants/<restaurantId>/approve \
 -H "Authorization: Bearer <TOKEN>"
 
-curl -X PUT http://localhost:6030/api/admin/restaurants/<restaurantId>/reject \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/restaurants/<restaurantId>/reject \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -86,13 +86,13 @@ curl -X PUT http://localhost:6030/api/admin/restaurants/<restaurantId>/reject \
 
 **Suspend User Account (Bans login)**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/users/<userId>/suspend \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/users/<userId>/suspend \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Unsuspend User Account**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/users/<userId>/unsuspend \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/users/<userId>/unsuspend \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -100,7 +100,7 @@ curl -X PUT http://localhost:6030/api/admin/users/<userId>/unsuspend \
 
 **Get Global Platform Stats (GMV, Active Users, etc.)**
 ```bash
-curl -X GET http://localhost:6030/api/admin/stats \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/stats \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -114,7 +114,7 @@ curl -X GET "http://localhost:6030/api/admin/users?role=customer&search=john" \
 
 **Manage Customer Loyalty Points**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/users/<userId>/loyalty \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/users/<userId>/loyalty \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"action": "add", "points": 500}'
@@ -122,7 +122,7 @@ curl -X PUT http://localhost:6030/api/admin/users/<userId>/loyalty \
 
 **Manage Vendor Commission Rate**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/restaurants/<restaurantId>/commission \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/restaurants/<restaurantId>/commission \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"commissionRate": 15.5}'
@@ -132,7 +132,7 @@ curl -X PUT http://localhost:6030/api/admin/restaurants/<restaurantId>/commissio
 
 **Manual Order Cancellation & Refund**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/orders/<orderId>/cancel \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/orders/<orderId>/cancel \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"reason": "Customer requested", "refundType": "wallet"}'
@@ -140,7 +140,7 @@ curl -X PUT http://localhost:6030/api/admin/orders/<orderId>/cancel \
 
 **Create Platform Coupon**
 ```bash
-curl -X POST http://localhost:6030/api/admin/coupons \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/coupons \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"code": "FESTIVAL50", "discountType": "percentage", "discountValue": 50, "isFirstOrderOnly": false}'
@@ -156,7 +156,7 @@ curl -X GET "http://localhost:6030/api/admin/orders/export?startDate=2026-01-01&
 
 **Manage Roles (RBAC)**
 ```bash
-curl -X POST http://localhost:6030/api/admin/roles \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/roles \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"name": "Support Manager", "permissions": ["view_orders", "manage_tickets"]}'
@@ -164,7 +164,7 @@ curl -X POST http://localhost:6030/api/admin/roles \
 
 **Create Multi-City Zone**
 ```bash
-curl -X POST http://localhost:6030/api/admin/zones \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/zones \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"name": "Delhi NCR", "baseDeliveryFee": 40}'
@@ -174,7 +174,7 @@ curl -X POST http://localhost:6030/api/admin/zones \
 
 **Create CMS Page (Privacy Policy, Terms)**
 ```bash
-curl -X POST http://localhost:6030/api/admin/cms \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/cms \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"slug": "privacy-policy", "title": "Privacy Policy", "content": "<h1>Privacy</h1><p>Content here...</p>"}'
@@ -182,7 +182,7 @@ curl -X POST http://localhost:6030/api/admin/cms \
 
 **Configure Refund Rules**
 ```bash
-curl -X POST http://localhost:6030/api/admin/refund-rules \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/refund-rules \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"name": "Driver Cancellation Rule", "triggerStatus": "accepted", "initiatorRole": "delivery_partner", "refundPercentage": 100}'
@@ -190,13 +190,13 @@ curl -X POST http://localhost:6030/api/admin/refund-rules \
 
 **View Admin Activity Logs**
 ```bash
-curl -X GET http://localhost:6030/api/admin/activity-logs?limit=50 \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/activity-logs?limit=50 \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Create Notification Template**
 ```bash
-curl -X POST http://localhost:6030/api/admin/notifications/templates \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/notifications/templates \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"name": "ORDER_ACCEPTED", "channel": "push", "titleTemplate": "Order {{orderId}} Accepted", "bodyTemplate": "Hi {{userName}}, your order is accepted!"}'
@@ -204,7 +204,7 @@ curl -X POST http://localhost:6030/api/admin/notifications/templates \
 
 **Manage Advertisement Campaigns**
 ```bash
-curl -X POST http://localhost:6030/api/admin/advertisements \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/advertisements \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"restaurant": "<restaurantId>", "adType": "banner", "budget": 5000, "startDate": "2026-08-01", "endDate": "2026-08-15"}'
@@ -212,7 +212,7 @@ curl -X POST http://localhost:6030/api/admin/advertisements \
 
 **Create Dine-in Table**
 ```bash
-curl -X POST http://localhost:6030/api/admin/tables \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/tables \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"restaurant": "<restaurantId>", "tableNumber": "T-12", "capacity": 4}'
@@ -222,19 +222,19 @@ curl -X POST http://localhost:6030/api/admin/tables \
 
 **Get Dashboard Stats**
 ```bash
-curl -X GET http://localhost:6030/api/admin/dashboard \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/dashboard \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Get Restaurant Orders**
 ```bash
-curl -X GET http://localhost:6030/api/admin/restaurants/<restaurantId>/orders \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/restaurants/<restaurantId>/orders \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Manual Assign Order to Delivery Partner**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/orders/<orderId>/assign \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/orders/<orderId>/assign \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"driverId": "<deliveryPartnerId>"}'
@@ -242,10 +242,10 @@ curl -X PUT http://localhost:6030/api/admin/orders/<orderId>/assign \
 
 **Get / Update Delivery Config**
 ```bash
-curl -X GET http://localhost:6030/api/admin/config/delivery \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/config/delivery \
 -H "Authorization: Bearer <TOKEN>"
 
-curl -X PUT http://localhost:6030/api/admin/config/delivery \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/config/delivery \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"baseFee": 40, "perKmFee": 10, "driverCommissionRate": 10}'
@@ -253,10 +253,10 @@ curl -X PUT http://localhost:6030/api/admin/config/delivery \
 
 **Get / Update Incentive Config**
 ```bash
-curl -X GET http://localhost:6030/api/admin/config/incentive \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/config/incentive \
 -H "Authorization: Bearer <TOKEN>"
 
-curl -X PUT http://localhost:6030/api/admin/config/incentive \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/config/incentive \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"dailyTarget": 10, "dailyBonus": 100}'
@@ -267,48 +267,48 @@ curl -X PUT http://localhost:6030/api/admin/config/incentive \
 **Sub-Admin Management**
 ```bash
 # Get all sub-admins
-curl -X GET http://localhost:6030/api/admin/admins \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/admins \
 -H "Authorization: Bearer <TOKEN>"
 
 # Create sub-admin
-curl -X POST http://localhost:6030/api/admin/admins \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/admins \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"name": "Support", "email": "support@ff.com", "password": "pass", "adminRole": "<roleId>"}'
 
 # Update sub-admin
-curl -X PUT http://localhost:6030/api/admin/admins/<adminId> \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/admins/<adminId> \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"isSuspended": false, "adminRole": "<roleId>"}'
 
 # Delete sub-admin
-curl -X DELETE http://localhost:6030/api/admin/admins/<adminId> \
+curl -X DELETE https://foodbackend.ridealdigitalseva.com/api/admin/admins/<adminId> \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Roles (RBAC)**
 ```bash
 # Get all roles
-curl -X GET http://localhost:6030/api/admin/roles \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/roles \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Dashboard**
 ```bash
 # Get revenue chart data (last 30 days)
-curl -X GET http://localhost:6030/api/admin/dashboard/revenue-chart \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/dashboard/revenue-chart \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Live Operations (Orders)**
 ```bash
 # Get all orders globally
-curl -X GET http://localhost:6030/api/admin/orders?status=pending \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/orders?status=pending \
 -H "Authorization: Bearer <TOKEN>"
 
 # Force update order status
-curl -X PUT http://localhost:6030/api/admin/orders/<orderId>/status \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/orders/<orderId>/status \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"status": "delivered"}'
@@ -317,7 +317,7 @@ curl -X PUT http://localhost:6030/api/admin/orders/<orderId>/status \
 **Marketing**
 ```bash
 # Send broadcast campaign
-curl -X POST http://localhost:6030/api/admin/broadcasts/send \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/broadcasts/send \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"title": "Promo!", "message": "50% off!", "targetAudience": "customers", "channels": ["push"]}'
@@ -326,11 +326,11 @@ curl -X POST http://localhost:6030/api/admin/broadcasts/send \
 **Financials**
 ```bash
 # Get all transactions
-curl -X GET http://localhost:6030/api/admin/transactions \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/transactions \
 -H "Authorization: Bearer <TOKEN>"
 
 # Process manual refund
-curl -X POST http://localhost:6030/api/admin/refunds/process \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/refunds/process \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"orderId": "<orderId>", "amount": 10.50, "reason": "Damaged goods"}'
@@ -339,17 +339,17 @@ curl -X POST http://localhost:6030/api/admin/refunds/process \
 **Configuration**
 ```bash
 # Get zones
-curl -X GET http://localhost:6030/api/admin/zones \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/zones \
 -H "Authorization: Bearer <TOKEN>"
 
 # Update zone
-curl -X PUT http://localhost:6030/api/admin/zones/<zoneId> \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/zones/<zoneId> \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"baseDeliveryFee": 45}'
 
 # Update global settings
-curl -X PUT http://localhost:6030/api/admin/settings \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/settings \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"taxRate": 18}'
@@ -358,11 +358,11 @@ curl -X PUT http://localhost:6030/api/admin/settings \
 **Communications (Support)**
 ```bash
 # Get all support tickets
-curl -X GET http://localhost:6030/api/admin/tickets \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/tickets \
 -H "Authorization: Bearer <TOKEN>"
 
 # Reply to ticket
-curl -X POST http://localhost:6030/api/admin/tickets/<ticketId>/reply \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/tickets/<ticketId>/reply \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"message": "We are looking into this."}'
@@ -371,11 +371,11 @@ curl -X POST http://localhost:6030/api/admin/tickets/<ticketId>/reply \
 **Smart Driver Tracking (Live Map)**
 ```bash
 # Get details of a specific order (Populates driver's location)
-curl -X GET http://localhost:6030/api/admin/orders/<orderId> \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/orders/<orderId> \
 -H "Authorization: Bearer <TOKEN>"
 
 # Check a specific driver's location
-curl -X GET http://localhost:6030/api/admin/delivery-partners/<driverId>/location \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/delivery-partners/<driverId>/location \
 -H "Authorization: Bearer <TOKEN>"
 ```
 *Note on WebSocket Tracking: To save bandwidth and avoid browser lag, the Admin Panel should NOT join a global room for all drivers. Instead, when viewing an order details page, the frontend should run `socket.emit('join', 'track_order_<orderId>')`. When tracking a specific driver, run `socket.emit('join', 'track_driver_<driverId>')`. The backend emits `driver_location_update` events to these rooms exclusively.*
@@ -384,13 +384,13 @@ curl -X GET http://localhost:6030/api/admin/delivery-partners/<driverId>/locatio
 
 **Get Sub-Admins**
 ```bash
-curl -X GET http://localhost:6030/api/admin/admins \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/admins \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Create Sub-Admin**
 ```bash
-curl -X POST http://localhost:6030/api/admin/admins \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/admins \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"name": "John Doe", "email": "john@fastfood.com", "password": "securepass", "role": "<roleId>"}'
@@ -398,7 +398,7 @@ curl -X POST http://localhost:6030/api/admin/admins \
 
 **Update Sub-Admin**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/admins/<adminId> \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/admins/<adminId> \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"isActive": false}'
@@ -406,7 +406,7 @@ curl -X PUT http://localhost:6030/api/admin/admins/<adminId> \
 
 **Delete Sub-Admin**
 ```bash
-curl -X DELETE http://localhost:6030/api/admin/admins/<adminId> \
+curl -X DELETE https://foodbackend.ridealdigitalseva.com/api/admin/admins/<adminId> \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -414,7 +414,7 @@ curl -X DELETE http://localhost:6030/api/admin/admins/<adminId> \
 
 **Update Global Settings**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/settings \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/settings \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"platformName": "Rideal Food", "supportEmail": "support@rideal.com"}'
@@ -422,7 +422,7 @@ curl -X PUT http://localhost:6030/api/admin/settings \
 
 **Send Push Broadcast**
 ```bash
-curl -X POST http://localhost:6030/api/admin/broadcasts/send \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/broadcasts/send \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"title": "Weekend Offer", "body": "Get 50% off!", "targetAudience": "all_customers"}'
@@ -430,10 +430,10 @@ curl -X POST http://localhost:6030/api/admin/broadcasts/send \
 
 **Get / Update Incentive Config**
 ```bash
-curl -X GET http://localhost:6030/api/admin/config/incentive \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/config/incentive \
 -H "Authorization: Bearer <TOKEN>"
 
-curl -X PUT http://localhost:6030/api/admin/config/incentive \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/config/incentive \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"baseIncentive": 20, "rainSurge": 15}'
@@ -443,13 +443,13 @@ curl -X PUT http://localhost:6030/api/admin/config/incentive \
 
 **Get All Zones**
 ```bash
-curl -X GET http://localhost:6030/api/admin/zones \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/zones \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Update Zone**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/zones/<zoneId> \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/zones/<zoneId> \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"isActive": false}'
@@ -465,13 +465,13 @@ curl -X GET "http://localhost:6030/api/admin/dashboard/revenue-chart?range=month
 
 **Get Transactions**
 ```bash
-curl -X GET http://localhost:6030/api/admin/transactions \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/transactions \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Process Refund Manually**
 ```bash
-curl -X POST http://localhost:6030/api/admin/refunds/process \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/admin/refunds/process \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"orderId": "<orderId>", "amount": 100}'
@@ -481,13 +481,13 @@ curl -X POST http://localhost:6030/api/admin/refunds/process \
 
 **Get All Restaurants for a Vendor (Cloud Kitchens)**
 ```bash
-curl -X GET http://localhost:6030/api/admin/vendors/<vendorId>/restaurants \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/vendors/<vendorId>/restaurants \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Update POS/KDS Integration**
 ```bash
-curl -X PUT http://localhost:6030/api/admin/restaurants/<restaurantId>/pos \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/restaurants/<restaurantId>/pos \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"provider": "petpooja", "apiKey": "xyz123"}'

@@ -41,6 +41,7 @@ const authenticate = async (req, res, next) => {
     req.user.role = decoded.role; // ensure role is on req.user
     next();
   } catch (error) {
+    console.error("AUTH MIDDLEWARE ERROR:", error);
     if (error.name === 'TokenExpiredError') {
       return errorResponse(res, 'Token expired', 401);
     }

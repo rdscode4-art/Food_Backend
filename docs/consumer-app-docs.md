@@ -33,60 +33,60 @@ This document outlines all the APIs and frontend implementation notes required t
 
 **Signup**
 ```bash
-curl -X POST http://localhost:6030/api/auth/signup \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/auth/signup \
 -H "Content-Type: application/json" \
 -d '{"name":"John Doe","email":"john@example.com","password":"password123","phone":"9999999999"}'
 ```
 
 **Verify OTP**
 ```bash
-curl -X POST http://localhost:6030/api/auth/verify-otp \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/auth/verify-otp \
 -H "Content-Type: application/json" \
 -d '{"email":"john@example.com","code":"1234","purpose":"signup"}'
 ```
 
 **Resend OTP**
 ```bash
-curl -X POST http://localhost:6030/api/auth/resend-otp \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/auth/resend-otp \
 -H "Content-Type: application/json" \
 -d '{"email":"john@example.com","purpose":"signup"}'
 ```
 
 **Login**
 ```bash
-curl -X POST http://localhost:6030/api/auth/login \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/auth/login \
 -H "Content-Type: application/json" \
 -d '{"email":"john@example.com","password":"password123"}'
 ```
 
 **Forgot Password**
 ```bash
-curl -X POST http://localhost:6030/api/auth/forgot-password \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/auth/forgot-password \
 -H "Content-Type: application/json" \
 -d '{"email":"john@example.com"}'
 ```
 
 **Reset Password**
 ```bash
-curl -X POST http://localhost:6030/api/auth/reset-password \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/auth/reset-password \
 -H "Content-Type: application/json" \
 -d '{"email":"john@example.com","code":"1234","newPassword":"newpassword123"}'
 ```
 
 **Refresh Token (uses HTTP-only cookie)**
 ```bash
-curl -X POST http://localhost:6030/api/auth/refresh-token
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/auth/refresh-token
 ```
 
 **Logout Current Device**
 ```bash
-curl -X POST http://localhost:6030/api/auth/logout \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/auth/logout \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Logout All Devices**
 ```bash
-curl -X POST http://localhost:6030/api/auth/logout-all \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/auth/logout-all \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -94,59 +94,59 @@ curl -X POST http://localhost:6030/api/auth/logout-all \
 
 **Get Profile**
 ```bash
-curl -X GET http://localhost:6030/api/user/profile \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/user/profile \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Update Profile**
 ```bash
-curl -X PUT http://localhost:6030/api/user/profile \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/user/profile \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"name":"John Updated"}'
 ```
 
 **Get All Addresses**
 ```bash
-curl -X GET http://localhost:6030/api/user/addresses \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/user/addresses \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Create Address**
 ```bash
-curl -X POST http://localhost:6030/api/user/addresses \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/user/addresses \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"label":"Home","street":"123 Main St","city":"Metro","zip":"10001","fullAddress":"123 Main St, Metro 10001","location":{"type":"Point","coordinates":[77.1,28.6]}}'
 ```
 
 **Update Address**
 ```bash
-curl -X PUT http://localhost:6030/api/user/addresses/<addressId> \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/user/addresses/<addressId> \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"isDefault":true}'
 ```
 
 **Delete Address**
 ```bash
-curl -X DELETE http://localhost:6030/api/user/addresses/<addressId> \
+curl -X DELETE https://foodbackend.ridealdigitalseva.com/api/user/addresses/<addressId> \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Get Payment Methods**
 ```bash
-curl -X GET http://localhost:6030/api/user/payment-methods \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/user/payment-methods \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Add Payment Method**
 ```bash
-curl -X POST http://localhost:6030/api/user/payment-methods \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/user/payment-methods \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"type":"card","details":"4242"}'
 ```
 
 **Delete Payment Method**
 ```bash
-curl -X DELETE http://localhost:6030/api/user/payment-methods/<paymentMethodId> \
+curl -X DELETE https://foodbackend.ridealdigitalseva.com/api/user/payment-methods/<paymentMethodId> \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -154,22 +154,22 @@ curl -X DELETE http://localhost:6030/api/user/payment-methods/<paymentMethodId> 
 
 **Get Categories**
 ```bash
-curl -X GET http://localhost:6030/api/restaurants/categories
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/restaurants/categories
 ```
 
 **Get Featured Restaurants**
 ```bash
-curl -X GET http://localhost:6030/api/restaurants/featured
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/restaurants/featured
 ```
 
 **Get Fastest Restaurants**
 ```bash
-curl -X GET http://localhost:6030/api/restaurants/fastest
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/restaurants/fastest
 ```
 
 **Get Popular Restaurants**
 ```bash
-curl -X GET http://localhost:6030/api/restaurants/popular
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/restaurants/popular
 ```
 
 **Search Restaurants (Advanced)**
@@ -180,51 +180,51 @@ curl -X GET "http://localhost:6030/api/restaurants/search?q=burger&isVeg=true&mi
 
 **Get Restaurant Detail**
 ```bash
-curl -X GET http://localhost:6030/api/restaurants/<restaurantId>
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/restaurants/<restaurantId>
 ```
 
 **Get Menu for Restaurant**
 ```bash
-curl -X GET http://localhost:6030/api/menu/<restaurantId>
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/menu/<restaurantId>
 ```
 
 **Get Specific Menu Item Detail**
 ```bash
-curl -X GET http://localhost:6030/api/menu/item/<itemId>
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/menu/item/<itemId>
 ```
 
 ### 4. Cart (`/api/cart`)
 
 **Get Current Cart**
 ```bash
-curl -X GET http://localhost:6030/api/cart \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/cart \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Add Item to Cart**
 *(Note: Automatically calculates taxes, platformFee, smallOrderFee, and surgeFee)*
 ```bash
-curl -X POST http://localhost:6030/api/cart \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/cart \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"menuItemId":"<menuId>","quantity":1}'
 ```
 
 **Update Cart Item Quantity**
 ```bash
-curl -X PUT http://localhost:6030/api/cart/<menuItemId> \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/cart/<menuItemId> \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"quantity":2}'
 ```
 
 **Delete Item from Cart**
 ```bash
-curl -X DELETE http://localhost:6030/api/cart/<menuItemId> \
+curl -X DELETE https://foodbackend.ridealdigitalseva.com/api/cart/<menuItemId> \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Clear Entire Cart**
 ```bash
-curl -X DELETE http://localhost:6030/api/cart \
+curl -X DELETE https://foodbackend.ridealdigitalseva.com/api/cart \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -232,13 +232,13 @@ curl -X DELETE http://localhost:6030/api/cart \
 
 **Get Wishlist**
 ```bash
-curl -X GET http://localhost:6030/api/wishlist \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/wishlist \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Toggle Item in Wishlist**
 ```bash
-curl -X POST http://localhost:6030/api/wishlist/toggle \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/wishlist/toggle \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"itemType":"restaurant","itemId":"<restaurantId>"}'
 ```
@@ -247,19 +247,19 @@ curl -X POST http://localhost:6030/api/wishlist/toggle \
 
 **Get All Notifications**
 ```bash
-curl -X GET http://localhost:6030/api/notifications \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/notifications \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Mark Notification as Read**
 ```bash
-curl -X PUT http://localhost:6030/api/notifications/<id>/read \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/notifications/<id>/read \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Mark All as Read**
 ```bash
-curl -X PUT http://localhost:6030/api/notifications/read-all \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/notifications/read-all \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -268,7 +268,7 @@ curl -X PUT http://localhost:6030/api/notifications/read-all \
 **Checkout (Creates placed order & clears cart)**
 *(Note: The response will include a `deliveryOtp` and `qrCodeString`. The user must present one of these to the delivery partner upon arrival to complete the delivery.)*
 ```bash
-curl -X POST http://localhost:6030/api/order/checkout \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/order/checkout \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{
   "deliveryAddress": {
@@ -292,39 +292,39 @@ curl -X POST http://localhost:6030/api/order/checkout \
 
 **Get Order History**
 ```bash
-curl -X GET http://localhost:6030/api/order \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/order \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Get Order Detail**
 *(The response object will contain the `deliveryOtp` and `qrCodeString` needed for driver verification)*
 ```bash
-curl -X GET http://localhost:6030/api/order/<orderId> \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/order/<orderId> \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Cancel Order (Only if status is "placed")**
 ```bash
-curl -X PUT http://localhost:6030/api/order/<orderId>/cancel \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/order/<orderId>/cancel \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Track Active Order (GPS tracking)**
 ```bash
-curl -X GET http://localhost:6030/api/order/<orderId>/track \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/order/<orderId>/track \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Submit Review**
 ```bash
-curl -X POST http://localhost:6030/api/order/<orderId>/review \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/order/<orderId>/review \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"rating":5,"comment":"Delicious!"}'
 ```
 
 **Get Help / Support Info**
 ```bash
-curl -X GET http://localhost:6030/api/order/<orderId>/help \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/order/<orderId>/help \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -332,46 +332,46 @@ curl -X GET http://localhost:6030/api/order/<orderId>/help \
 
 **Get Banners**
 ```bash
-curl -X GET http://localhost:6030/api/static/banners
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/static/banners
 ```
 
 **Get App Config**
 ```bash
-curl -X GET http://localhost:6030/api/static/app-config
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/static/app-config
 ```
 
 **About Us**
 ```bash
-curl -X GET http://localhost:6030/api/static/about
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/static/about
 ```
 
 **FAQ**
 ```bash
-curl -X GET http://localhost:6030/api/static/faq
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/static/faq
 ```
 
 **Terms & Conditions**
 ```bash
-curl -X GET http://localhost:6030/api/static/terms
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/static/terms
 ```
 
 ### 9. Wallet (`/api/wallet`)
 
 **Get Wallet Balance**
 ```bash
-curl -X GET http://localhost:6030/api/wallet \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/wallet \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Get Wallet Transactions**
 ```bash
-curl -X GET http://localhost:6030/api/wallet/transactions \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/wallet/transactions \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Add Money to Wallet**
 ```bash
-curl -X POST http://localhost:6030/api/wallet/add \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/wallet/add \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"amount": 500}'
 ```
@@ -382,13 +382,13 @@ curl -X POST http://localhost:6030/api/wallet/add \
 
 **Get Available Coupons**
 ```bash
-curl -X GET http://localhost:6030/api/coupons \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/coupons \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Apply Coupon to Cart**
 ```bash
-curl -X POST http://localhost:6030/api/coupons/apply \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/coupons/apply \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"code": "WELCOME50"}'
 ```
@@ -397,12 +397,12 @@ curl -X POST http://localhost:6030/api/coupons/apply \
 
 **Get All Active Plans**
 ```bash
-curl -X GET http://localhost:6030/api/membership
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/membership
 ```
 
 **Subscribe to a Plan**
 ```bash
-curl -X POST http://localhost:6030/api/membership/subscribe \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/membership/subscribe \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"planId": "<planId>"}'
 ```
@@ -411,20 +411,20 @@ curl -X POST http://localhost:6030/api/membership/subscribe \
 
 **Create a Support Ticket**
 ```bash
-curl -X POST http://localhost:6030/api/tickets \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/tickets \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"subject": "Order Missing Items", "description": "My burger was missing from order #1234", "orderId": "<orderId>"}'
 ```
 
 **Get My Tickets**
 ```bash
-curl -X GET http://localhost:6030/api/tickets \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/tickets \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Reply to a Ticket**
 ```bash
-curl -X POST http://localhost:6030/api/tickets/<ticketId>/reply \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/tickets/<ticketId>/reply \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"message": "I also forgot to mention I did not receive the fries."}'
 ```
@@ -433,5 +433,5 @@ curl -X POST http://localhost:6030/api/tickets/<ticketId>/reply \
 
 **Get All Active Service Zones**
 ```bash
-curl -X GET http://localhost:6030/api/zones
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/zones
 ```

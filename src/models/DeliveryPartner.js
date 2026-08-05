@@ -11,6 +11,8 @@ const deliveryPartnerSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false },
     isSuspended: { type: Boolean, default: false },
     activeSessions: { type: [String], default: [] },
+    city: { type: String, trim: true },
+    totalDeliveries: { type: Number, default: 0 },
     
     // Partner specific
     isApproved: { type: Boolean, default: false },

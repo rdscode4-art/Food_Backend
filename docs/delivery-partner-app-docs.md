@@ -36,21 +36,21 @@ This document outlines all the APIs and frontend implementation notes required t
 
 **Signup (Delivery Partner)**
 ```bash
-curl -X POST http://localhost:6030/api/auth/signup/delivery-partner \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/auth/signup/delivery-partner \
 -H "Content-Type: application/json" \
 -d '{"name":"John Rider","email":"rider@example.com","password":"password123","phone":"8888888888","vehicleType":"bike","vehicleNumber":"AB-12-CD-3456","licenseNumber":"DL123456789","aadhaarNumber":"123456789012","panNumber":"ABCDE1234F","bankDetails":{"accountNumber":"123456789","ifsc":"HDFC000123","bankName":"HDFC"},"partnerDocuments":["http://link-to-license.jpg"]}'
 ```
 
 **Verify OTP**
 ```bash
-curl -X POST http://localhost:6030/api/auth/verify-otp \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/auth/verify-otp \
 -H "Content-Type: application/json" \
 -d '{"email":"rider@example.com","code":"1234","purpose":"signup"}'
 ```
 
 **Login**
 ```bash
-curl -X POST http://localhost:6030/api/auth/login \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/auth/login \
 -H "Content-Type: application/json" \
 -d '{"email":"rider@example.com","password":"password123"}'
 ```
@@ -59,14 +59,14 @@ curl -X POST http://localhost:6030/api/auth/login \
 
 **Toggle Online Status**
 ```bash
-curl -X PUT http://localhost:6030/api/partner/online-status \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/partner/online-status \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"isOnline":true}'
 ```
 
 **Sync GPS Location (Ping every 5-10s)**
 ```bash
-curl -X PUT http://localhost:6030/api/partner/location \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/partner/location \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"coordinates":[77.615,12.935]}'
 ```
@@ -76,39 +76,39 @@ curl -X PUT http://localhost:6030/api/partner/location \
 
 **Get Available Jobs Nearby**
 ```bash
-curl -X GET http://localhost:6030/api/partner/orders/available \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/partner/orders/available \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Accept a Job**
 ```bash
-curl -X PUT http://localhost:6030/api/partner/orders/<orderId>/accept \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/partner/orders/<orderId>/accept \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Reject a Job (Triggers Auto-Reassign)**
 ```bash
-curl -X PUT http://localhost:6030/api/partner/orders/<orderId>/reject \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/partner/orders/<orderId>/reject \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"reason": "Vehicle Breakdown"}'
 ```
 
 **Mark as Picked Up**
 ```bash
-curl -X PUT http://localhost:6030/api/partner/orders/<orderId>/picked-up \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/partner/orders/<orderId>/picked-up \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Mark as Out for Delivery**
 ```bash
-curl -X PUT http://localhost:6030/api/partner/orders/<orderId>/out-for-delivery \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/partner/orders/<orderId>/out-for-delivery \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Mark as Delivered (Requires Verification)**
 ```bash
 # You must provide AT LEAST ONE of these three verification methods
-curl -X PUT http://localhost:6030/api/partner/orders/<orderId>/deliver \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/partner/orders/<orderId>/deliver \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{
@@ -123,19 +123,19 @@ curl -X PUT http://localhost:6030/api/partner/orders/<orderId>/deliver \
 **Get Earnings Summary (Dashboard)**
 ```bash
 # Returns walletBalance, dailyEarnings, weeklyEarnings, monthlyEarnings, totalEarnings
-curl -X GET http://localhost:6030/api/partner/payouts/summary \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/partner/payouts/summary \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Get Payout History**
 ```bash
-curl -X GET http://localhost:6030/api/partner/payouts/history \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/partner/payouts/history \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Request Wallet Withdrawal**
 ```bash
-curl -X POST http://localhost:6030/api/partner/withdraw \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/partner/withdraw \
 -H "Authorization: Bearer <TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"amount": 500}'
@@ -148,13 +148,13 @@ curl -X POST http://localhost:6030/api/partner/withdraw \
 
 **Get Completed Trip History**
 ```bash
-curl -X GET http://localhost:6030/api/partner/orders/history \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/partner/orders/history \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Get Driver Performance (Ratings & Reviews)**
 ```bash
-curl -X GET http://localhost:6030/api/partner/ratings \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/partner/ratings \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -162,7 +162,7 @@ curl -X GET http://localhost:6030/api/partner/ratings \
 
 **Raise a Support Ticket**
 ```bash
-curl -X POST http://localhost:6030/api/tickets \
+curl -X POST https://foodbackend.ridealdigitalseva.com/api/tickets \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"subject": "Payment Delay", "description": "My last withdrawal is stuck.", "type": "driver"}'
 ```
@@ -174,20 +174,20 @@ curl -X POST http://localhost:6030/api/tickets \
 
 **Get Driver Profile**
 ```bash
-curl -X GET http://localhost:6030/api/partner/profile \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/partner/profile \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Update Profile (Vehicle Info)**
 ```bash
-curl -X PUT http://localhost:6030/api/partner/profile \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/partner/profile \
 -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
 -d '{"vehicleNumber": "MH-12-PQ-9999"}'
 ```
 
 **Get Notifications**
 ```bash
-curl -X GET http://localhost:6030/api/notifications \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/notifications \
 -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -198,11 +198,11 @@ curl -X GET http://localhost:6030/api/notifications \
 ### 1. Delivery Charge Config
 ```bash
 # Get Config
-curl -X GET http://localhost:6030/api/admin/config/delivery \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/config/delivery \
 -H "Authorization: Bearer <ADMIN_TOKEN>"
 
 # Update Config (Example toggling Peak Hour, Rain Fee, and setting Driver Commission to 10%)
-curl -X PUT http://localhost:6030/api/admin/config/delivery \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/config/delivery \
 -H "Authorization: Bearer <ADMIN_TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"isPeakHour": true, "rainFee": 20, "driverCommissionRate": 10}'
@@ -211,11 +211,11 @@ curl -X PUT http://localhost:6030/api/admin/config/delivery \
 ### 2. Driver Incentive Config
 ```bash
 # Get Config
-curl -X GET http://localhost:6030/api/admin/config/incentive \
+curl -X GET https://foodbackend.ridealdigitalseva.com/api/admin/config/incentive \
 -H "Authorization: Bearer <ADMIN_TOKEN>"
 
 # Update Config (Example setting a Weekly Target and Festival Bonus)
-curl -X PUT http://localhost:6030/api/admin/config/incentive \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/config/incentive \
 -H "Authorization: Bearer <ADMIN_TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"weeklyTargetOrders": 50, "weeklyTargetBonus": 1000, "festivalBonus": 50}'
@@ -224,7 +224,7 @@ curl -X PUT http://localhost:6030/api/admin/config/incentive \
 ### 3. Manual Order Assignment
 ```bash
 # Force assign a driver to an order
-curl -X PUT http://localhost:6030/api/admin/orders/<orderId>/assign \
+curl -X PUT https://foodbackend.ridealdigitalseva.com/api/admin/orders/<orderId>/assign \
 -H "Authorization: Bearer <ADMIN_TOKEN>" \
 -H "Content-Type: application/json" \
 -d '{"driverId": "<DRIVER_USER_ID>"}'

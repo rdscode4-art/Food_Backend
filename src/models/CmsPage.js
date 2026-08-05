@@ -6,13 +6,7 @@ const cmsPageSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      enum: [
-        'privacy-policy',
-        'terms-conditions',
-        'refund-policy',
-        'about-us',
-        'contact-us',
-      ],
+      
       description: 'URL slug or identifier for the CMS page',
     },
     title: {
@@ -38,3 +32,4 @@ const cmsPageSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('CmsPage', cmsPageSchema);
+
