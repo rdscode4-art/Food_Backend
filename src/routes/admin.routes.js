@@ -21,11 +21,14 @@ router.get('/roles', adminController.getRoles);
 // Dashboard
 router.get('/dashboard', adminController.getDashboardStats);
 router.get('/dashboard/revenue-chart', adminController.getRevenueChart);
+router.get('/dashboard/comprehensive', adminController.getComprehensiveAnalytics);
 router.get('/dashboard/top-zones', adminController.getTopZones);
 
 // General Platform Entities
 router.get('/reservations', adminController.getReservations);
 router.get('/reviews', adminController.getReviews);
+router.put('/reviews/:id', adminController.updateReviewStatus);
+router.delete('/reviews/:id', adminController.deleteReview);
 router.get('/notifications', adminController.getNotifications);
 router.get('/tables', adminController.getTables);
 
@@ -89,13 +92,20 @@ router.get('/broadcasts', adminController.getBroadcasts);
 
 // Financials
 router.get('/transactions', adminController.getTransactions);
+router.get('/vendor-settlements', adminController.getVendorSettlements);
+router.put('/vendor-settlements/:id/settle', adminController.settleVendor);
+router.get('/driver-payouts', adminController.getDriverPayouts);
+router.put('/driver-payouts/:id/status', adminController.updateDriverPayoutStatus);
 router.post('/refunds/process', adminController.processRefund);
+router.get('/refunds', adminController.getRefundRequests);
+router.put('/refunds/:id/status', adminController.updateRefundRequestStatus);
 
 // Roles & Zones
 router.post('/roles', adminController.createRole);
 router.get('/zones', adminController.getZones);
 router.post('/zones', adminController.createZone);
 router.put('/zones/:id', adminController.updateZone);
+router.delete('/zones/:id', adminController.deleteZone);
 
 // Settings
 router.put('/settings', adminController.updateSettings);
@@ -107,8 +117,12 @@ router.post('/tickets/:id/reply', adminController.replyToTicket);
 // CMS & Rules
 router.post('/cms', adminController.createCmsPage);
 router.get('/cms', adminController.getCmsPages);
+router.get('/custom-sections', adminController.getCustomSections);
+router.post('/custom-sections', adminController.addCustomSection);
 router.post('/refund-rules', adminController.createRefundRule);
 router.get('/refund-rules', adminController.getRefundRules);
+router.delete('/refund-rules/:id', adminController.deleteRefundRule);
+router.put('/refund-rules/:id/status', adminController.updateRefundRuleStatus);
 router.get('/activity-logs', adminController.getActivityLogs);
 
 // Homepage Builder (CMS)
@@ -162,7 +176,25 @@ router.post('/faqs', adminController.createFaq);
 router.delete('/faqs/:id', adminController.deleteFaq);
 router.delete('/faq-categories/:categoryName', adminController.deleteFaqCategory);
 
+// Settings GET (already have PUT)
+router.get('/settings', adminController.getSettings);
+
+// Surge Rules
+router.get('/surge-rules', adminController.getSurgeRules);
+router.post('/surge-rules', adminController.addSurgeRule);
+router.delete('/surge-rules/:name', adminController.deleteSurgeRule);
+
+// Loyalty Plans
+router.get('/loyalty-plans', adminController.getLoyaltyPlans);
+router.post('/loyalty-plans', adminController.addLoyaltyPlan);
+router.delete('/loyalty-plans/:id', adminController.deleteLoyaltyPlan);
+
+// 3rd Party Integrations
+router.get('/integrations', adminController.getIntegrations);
+router.put('/integrations/:id', adminController.updateIntegration);
+
 module.exports = router;
+
 
 
 

@@ -7,17 +7,10 @@ const refundRuleSchema = new mongoose.Schema(
       required: true,
       description: 'e.g., Cancelled before acceptance, Cancelled by driver',
     },
-    triggerStatus: {
+    condition: {
       type: String,
-      enum: ['placed', 'accepted', 'preparing', 'ready', 'picked_up'],
       required: true,
-      description: 'The order status at which this rule applies upon cancellation',
-    },
-    initiatorRole: {
-      type: String,
-      enum: ['customer', 'restaurant_owner', 'delivery_partner', 'admin'],
-      required: true,
-      description: 'Who initiated the cancellation',
+      description: 'e.g. Order cancelled by driver after pickup',
     },
     refundPercentage: {
       type: Number,

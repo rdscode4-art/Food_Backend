@@ -10,7 +10,11 @@ const categorySchema = new mongoose.Schema(
     },
     icon: {
       type: String, // URL to image/icon
-      required: true,
+      required: false,
+    },
+    active: {
+      type: Boolean,
+      default: true,
     },
     restaurantCount: {
       type: Number,
